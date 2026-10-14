@@ -1,0 +1,6 @@
+{
+  "name": "FuelTrack",
+  "description": "Theo dõi chi phí và tiêu hao nhiên liệu cho xe máy và ô tô cá nhân",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
