@@ -10,8 +10,8 @@ import com.example.core.model.Vehicle
 import com.example.core.repository.FuelRepository
 import com.example.core.repository.FuelTypeRepository
 import com.example.core.repository.VehicleRepository
-import com.example.core.util.FuelCalculator
 import com.example.core.util.FuelConsumptionCalculator
+import com.example.core.util.FuelDistanceCalculator
 import com.example.core.util.FuelCostCalculator
 import com.example.core.util.StatisticsCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,12 +74,12 @@ class DashboardViewModel @Inject constructor(
         val consumptionByEntryId = FuelConsumptionCalculator.consumptionByEndingEntryId(vehicleEntries)
         val costByEntryId = FuelCostCalculator.costByEndingEntryId(vehicleEntries)
 
-        // Build recent entries with detail diffs
-        val recentWithDetails = vehicleEntries.take(5).mapIndexed { index, entry ->
-            val prevEntry = if (index + 1 < vehicleEntries.size) vehicleEntries[index + 1] else null
-            val distMeters = if (prevEntry != null) {
-                FuelCalculator.calculateDistance(prevEntry.odometerMeters, entry.odometerMeters)
-            } else null
+        // Build recent entries with detail diffs. The list is ordered newest-first for
+        // display, so "distance since previous fill-up" must be resolved by timestamp,
+        // not by the neighbouring list item (odometer order breaks after a reset).
+        val distanceByEntryId = FuelDistanceCalculator.distanceByEntryId(vehicleEntries)
+        val recentWithDetails = vehicleEntries.take(5).map { entry ->
+            val distMeters = distanceByEntryId[entry.id]
 
             val consumption = consumptionByEntryId[entry.id]
 

@@ -7,8 +7,8 @@ import com.example.core.model.FuelEntryWithDetails
 import com.example.core.repository.FuelRepository
 import com.example.core.repository.FuelTypeRepository
 import com.example.core.repository.VehicleRepository
-import com.example.core.util.FuelCalculator
 import com.example.core.util.FuelConsumptionCalculator
+import com.example.core.util.FuelDistanceCalculator
 import com.example.core.util.FuelCostCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -58,11 +58,11 @@ class FuelHistoryViewModel @Inject constructor(
         val costByEntryId = FuelCostCalculator.costByEndingEntryId(entries)
         val vehicleName = vehicle?.name ?: "Phương tiện"
 
-        val detailedEntries = entries.mapIndexed { index, entry ->
-            val prevEntry = if (index + 1 < entries.size) entries[index + 1] else null
-            val distMeters = if (prevEntry != null) {
-                FuelCalculator.calculateDistance(prevEntry.odometerMeters, entry.odometerMeters)
-            } else null
+        // Resolve the previous fill-up by timestamp: the list itself is ordered by
+        // odometer for display, which stops matching time order after a reset.
+        val distanceByEntryId = FuelDistanceCalculator.distanceByEntryId(entries)
+        val detailedEntries = entries.map { entry ->
+            val distMeters = distanceByEntryId[entry.id]
 
             val consumption = consumptionByEntryId[entry.id]
 

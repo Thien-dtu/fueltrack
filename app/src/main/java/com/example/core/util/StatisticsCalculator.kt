@@ -5,54 +5,63 @@ import com.example.core.model.MonthlyFuelStats
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
 object StatisticsCalculator {
 
+    private val monthKeyFormat = ThreadLocal.withInitial { SimpleDateFormat("yyyy-MM", Locale.US) }
+    private val monthDisplayFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("'Tháng' M, yyyy", Locale.forLanguageTag("vi-VN"))
+    }
+
     /**
-     * Calculates stats grouped by calendar month from a vehicle's chronological fuel entries.
+     * Calculates stats grouped by calendar month from a vehicle's fuel entries.
      * Raw facts: odometerMeters, timestamp, liters, amountPaid, isFullTank.
      * All distance computations use meters internally.
+     *
+     * Distance is attributed chronologically: every entry contributes the distance
+     * driven since the previous entry (by timestamp), and that distance is counted
+     * in the month of the entry that ended the leg. Ordering by odometer instead
+     * would misattribute legs whenever the meter is replaced or rolled back.
      */
     fun computeMonthlyStats(entries: List<FuelEntry>): List<MonthlyFuelStats> {
         if (entries.isEmpty()) return emptyList()
 
-        val sortedAsc = entries.sortedWith(compareBy<FuelEntry> { it.odometerMeters }.thenBy { it.timestamp })
+        val chronological = entries.sortedWith(compareBy<FuelEntry> { it.timestamp }.thenBy { it.id })
+        val monthKeyFormatter = monthKeyFormat.get()!!
+        val displayFormatter = monthDisplayFormat.get()!!
 
-        val cal = Calendar.getInstance()
-        val monthFormatKey = SimpleDateFormat("yyyy-MM", Locale.US)
-        val monthFormatDisplay = SimpleDateFormat("'Tháng' M, yyyy", Locale.forLanguageTag("vi-VN"))
+        fun monthKeyOf(entry: FuelEntry): String = monthKeyFormatter.format(Date(entry.timestamp))
+
+        // Distance driven on each entry's leg, counted in that entry's month.
+        val distanceByMonth = LinkedHashMap<String, Long>()
+        var previousOdometer: Long? = null
+        for (entry in chronological) {
+            val previous = previousOdometer
+            // A negative delta means the odometer was replaced or rolled back: the
+            // jump is not a distance, so this leg contributes nothing.
+            val legMeters = if (previous != null) (entry.odometerMeters - previous).coerceAtLeast(0L) else 0L
+            val monthKey = monthKeyOf(entry)
+            distanceByMonth[monthKey] = (distanceByMonth[monthKey] ?: 0L) + legMeters
+            previousOdometer = entry.odometerMeters
+        }
+
         val entryById = entries.associateBy { it.id }
         val cyclesByMonth = FuelConsumptionCalculator.calculateCycles(entries)
             .mapNotNull { cycle ->
-                entryById[cycle.endEntryId]?.let { cycle to monthFormatKey.format(Date(it.timestamp)) }
+                entryById[cycle.endEntryId]?.let { cycle to monthKeyFormatter.format(Date(it.timestamp)) }
             }
             .groupBy({ it.second }, { it.first })
 
-        // Group entries by month key (e.g. "2026-10")
-        val groupedByMonth = sortedAsc.groupBy { entry ->
-            cal.timeInMillis = entry.timestamp
-            monthFormatKey.format(Date(entry.timestamp))
-        }
+        val entriesByMonth = chronological.groupBy { monthKeyOf(it) }
 
         val resultList = mutableListOf<MonthlyFuelStats>()
 
-        // For consumption, we track consecutive full-tank pairs
-        // We can look at pairwise entries in the vehicle's history
-        for ((monthKey, monthEntries) in groupedByMonth) {
+        for ((monthKey, monthEntries) in entriesByMonth) {
             val totalFuelLiters = monthEntries.sumOf { it.liters }
             val totalCostVnd = monthEntries.sumOf { it.amountPaid }
-
-            // Monthly distance: difference between max and min ODO in this month's entries,
-            // or if there is a previous entry before this month, from the closest prior entry.
-            val firstEntryInMonth = monthEntries.first()
-            val priorEntry = sortedAsc.lastOrNull { it.odometerMeters < firstEntryInMonth.odometerMeters }
-
-            val baselineOdo = priorEntry?.odometerMeters ?: firstEntryInMonth.odometerMeters
-            val maxOdoInMonth = monthEntries.maxOf { it.odometerMeters }
-            val totalDistanceMeters = (maxOdoInMonth - baselineOdo).coerceAtLeast(0L)
+            val totalDistanceMeters = distanceByMonth[monthKey] ?: 0L
 
             val monthCycles = cyclesByMonth[monthKey].orEmpty()
             val fullTankDistanceMeters = monthCycles.sumOf { it.distanceMeters }
@@ -70,8 +79,7 @@ object StatisticsCalculator {
                 null
             }
 
-            cal.timeInMillis = monthEntries.first().timestamp
-            val displayName = monthFormatDisplay.format(Date(monthEntries.first().timestamp))
+            val displayName = displayFormatter.format(Date(monthEntries.first().timestamp))
 
             resultList.add(
                 MonthlyFuelStats(
