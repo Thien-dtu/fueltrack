@@ -64,10 +64,11 @@ android {
       // one. This also makes release buildable without the upload keystore
       // (my-upload-key.jks), which is not in the repository.
       //
-      // Trade-offs, accepted deliberately:
-      //  - assembleDebug now runs R8: minutes instead of seconds.
-      //  - Breakpoints work, but locals are renamed and the code is inlined; read the
-      //    stack trace through app/build/outputs/mapping/debug/mapping.txt.
+      // R8 skips all optimisation and obfuscation while a build type is debuggable,
+      // so the flag must be off for minification to actually do its job. Without
+      // this, isMinifyEnabled only shrank the code (27,617 -> 8,477 classes) but the
+      // output stayed fully readable.
+      isDebuggable = false
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
