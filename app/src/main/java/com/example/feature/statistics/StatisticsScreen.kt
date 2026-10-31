@@ -33,10 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.MonthlyFuelStats
 import com.example.core.ui.components.VehicleSwitcher
 import com.example.core.ui.FabClearance
@@ -64,7 +66,7 @@ fun StatisticsScreen(
     if (uiState.vehicles.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = "Thêm phương tiện để xem thống kê",
+                text = stringResource(R.string.stats_empty_vehicles),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -90,7 +92,7 @@ fun StatisticsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Thống kê",
+                    text = stringResource(R.string.stats_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -113,7 +115,7 @@ fun StatisticsScreen(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
-                        text = "TỔNG QUAN TẤT CẢ THỜI GIAN",
+                        text = stringResource(R.string.stats_all_time_overview),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -128,7 +130,7 @@ fun StatisticsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Quãng đường",
+                                text = stringResource(R.string.stats_distance),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -142,7 +144,7 @@ fun StatisticsScreen(
 
                         Column {
                             Text(
-                                text = "Nhiên liệu",
+                                text = stringResource(R.string.stats_fuel),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -156,7 +158,7 @@ fun StatisticsScreen(
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "Chi phí nhiên liệu",
+                                text = stringResource(R.string.stats_fuel_cost),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -175,7 +177,7 @@ fun StatisticsScreen(
         // Monthly Breakdown Header
         item {
             Text(
-                text = "Thống kê theo tháng",
+                text = stringResource(R.string.stats_monthly_section),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -196,7 +198,7 @@ fun StatisticsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Chưa có đủ dữ liệu theo tháng cho xe này.",
+                            text = stringResource(R.string.stats_monthly_empty),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -251,7 +253,7 @@ fun MonthlyStatCard(
                     )
                 }
                 Text(
-                    text = "${stats.entriesCount} lần đổ",
+                    text = stringResource(R.string.stats_entries_count, stats.entriesCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -267,7 +269,7 @@ fun MonthlyStatCard(
                 // Distance
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Quãng đường",
+                        text = stringResource(R.string.stats_distance),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -282,7 +284,7 @@ fun MonthlyStatCard(
                 // Fuel
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Nhiên liệu",
+                        text = stringResource(R.string.stats_fuel),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -297,7 +299,7 @@ fun MonthlyStatCard(
                 // Cost
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Chi phí",
+                        text = stringResource(R.string.stats_cost),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -324,7 +326,7 @@ fun MonthlyStatCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Tiêu hao: ",
+                        text = stringResource(R.string.stats_consumption_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -338,12 +340,16 @@ fun MonthlyStatCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Chi phí: ",
+                        text = stringResource(R.string.stats_cost_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = if (stats.averageCostPerKmVnd != null) "${Formatters.formatCurrencyVnd(stats.averageCostPerKmVnd.toLong())}/km" else "Chưa đủ dữ liệu",
+                        text = if (stats.averageCostPerKmVnd != null) {
+                            "${Formatters.formatCurrencyVnd(stats.averageCostPerKmVnd.toLong())}/km"
+                        } else {
+                            stringResource(R.string.stats_not_enough_data)
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = AmberPrimary

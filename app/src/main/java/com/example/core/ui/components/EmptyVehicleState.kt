@@ -27,10 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.DarkSurface
 import com.example.core.ui.theme.DarkSurfaceVariant
@@ -39,9 +41,13 @@ import com.example.core.ui.theme.DarkSurfaceVariant
 fun EmptyVehicleState(
     onAddVehicle: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Bạn chưa có phương tiện nào.",
-    description: String = "Thêm chiếc xe đầu tiên để bắt đầu theo dõi chi phí, lịch bảo dưỡng và nhiên liệu."
+    // Null means "use the default copy". Default arguments of a @Composable cannot
+    // call stringResource, so the defaults are resolved inside the body instead.
+    title: String? = null,
+    description: String? = null
 ) {
+    val resolvedTitle = title ?: stringResource(R.string.empty_vehicle_title)
+    val resolvedDescription = description ?: stringResource(R.string.empty_vehicle_description)
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -77,7 +83,7 @@ fun EmptyVehicleState(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = title,
+                    text = resolvedTitle,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -87,7 +93,7 @@ fun EmptyVehicleState(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = description,
+                    text = resolvedDescription,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
@@ -106,7 +112,7 @@ fun EmptyVehicleState(
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Thêm phương tiện",
+                        text = stringResource(R.string.empty_vehicle_add),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )

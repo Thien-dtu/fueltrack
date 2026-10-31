@@ -32,9 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.FuelEntryWithDetails
 import com.example.core.ui.components.FuelEntryCard
 import com.example.core.ui.theme.AmberPrimary
@@ -57,7 +59,7 @@ fun FuelHistoryScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Lịch sử đổ xăng",
+                            text = stringResource(R.string.fuel_history_title),
                             fontWeight = FontWeight.Bold
                         )
                         Text(
@@ -71,7 +73,7 @@ fun FuelHistoryScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.fuel_history_back)
                         )
                     }
                 },
@@ -101,7 +103,7 @@ fun FuelHistoryScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Chưa có lịch sử đổ xăng cho xe này.",
+                    text = stringResource(R.string.fuel_history_empty),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -119,7 +121,7 @@ fun FuelHistoryScreen(
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Tổng cộng ${uiState.entries.size} lần đổ xăng",
+                    text = stringResource(R.string.fuel_history_total, uiState.entries.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -148,8 +150,8 @@ fun FuelHistoryScreen(
         if (entryToDelete != null) {
             AlertDialog(
                 onDismissRequest = { entryToDelete = null },
-                title = { Text("Xác nhận xóa") },
-                text = { Text("Bạn có chắc chắn muốn xóa bản ghi đổ xăng này không?") },
+                title = { Text(stringResource(R.string.fuel_history_delete_title)) },
+                text = { Text(stringResource(R.string.fuel_history_delete_message)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -157,12 +159,12 @@ fun FuelHistoryScreen(
                             entryToDelete = null
                         }
                     ) {
-                        Text("Xóa", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.fuel_history_delete_confirm), color = MaterialTheme.colorScheme.error)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { entryToDelete = null }) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.fuel_history_cancel))
                     }
                 }
             )

@@ -49,11 +49,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.DarkBackground
 import com.example.core.ui.theme.DarkSurface
@@ -82,19 +84,32 @@ fun AddEditScheduleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEditMode) "Chỉnh sửa lịch bảo dưỡng" else "Thêm lịch bảo dưỡng mới", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        if (isEditMode) {
+                            stringResource(R.string.maint_schedule_title_edit)
+                        } else {
+                            stringResource(R.string.maint_schedule_title_new)
+                        },
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.maint_schedule_back)
                         )
                     }
                 },
                 actions = {
                     if (isEditMode) {
                         IconButton(onClick = { showCancelConfirmDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Hủy lịch", tint = MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.maint_schedule_cancel_action),
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 },
@@ -117,12 +132,13 @@ fun AddEditScheduleScreen(
                 expanded = vehicleMenuExpanded,
                 onExpandedChange = { vehicleMenuExpanded = !vehicleMenuExpanded }
             ) {
-                val selectedVehicleName = state.vehicles.find { it.id == state.selectedVehicleId }?.name ?: "Chọn xe"
+                val selectedVehicleName = state.vehicles.find { it.id == state.selectedVehicleId }?.name
+                    ?: stringResource(R.string.maint_schedule_vehicle_placeholder)
                 OutlinedTextField(
                     value = selectedVehicleName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Phương tiện") },
+                    label = { Text(stringResource(R.string.maint_schedule_vehicle_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = vehicleMenuExpanded) },
                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -152,12 +168,13 @@ fun AddEditScheduleScreen(
                     expanded = templateMenuExpanded,
                     onExpandedChange = { templateMenuExpanded = !templateMenuExpanded }
                 ) {
-                    val templateName = state.templates.find { it.id == state.selectedTemplateId }?.name ?: "Chọn từ mẫu gợi ý (tùy chọn)"
+                    val templateName = state.templates.find { it.id == state.selectedTemplateId }?.name
+                        ?: stringResource(R.string.maint_schedule_template_placeholder)
                     OutlinedTextField(
                         value = templateName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Điền nhanh từ mẫu có sẵn") },
+                        label = { Text(stringResource(R.string.maint_schedule_template_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = templateMenuExpanded) },
                         modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -171,7 +188,15 @@ fun AddEditScheduleScreen(
                     ) {
                         state.templates.forEach { tmpl ->
                             DropdownMenuItem(
-                                text = { Text("${tmpl.name} (${tmpl.category})") },
+                                text = {
+                                    Text(
+                                        stringResource(
+                                            R.string.maint_schedule_template_item,
+                                            tmpl.name,
+                                            tmpl.category
+                                        )
+                                    )
+                                },
                                 onClick = {
                                     viewModel.onTemplateSelected(tmpl)
                                     templateMenuExpanded = false
@@ -186,7 +211,7 @@ fun AddEditScheduleScreen(
             OutlinedTextField(
                 value = state.title,
                 onValueChange = viewModel::onTitleChanged,
-                label = { Text("Tên lịch bảo dưỡng *") },
+                label = { Text(stringResource(R.string.maint_schedule_title_label)) },
                 isError = state.titleError != null,
                 supportingText = state.titleError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth().testTag("schedule_title_input"),
@@ -202,7 +227,7 @@ fun AddEditScheduleScreen(
             OutlinedTextField(
                 value = state.category,
                 onValueChange = viewModel::onCategoryChanged,
-                label = { Text("Danh mục") },
+                label = { Text(stringResource(R.string.maint_schedule_category_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = DarkSurface,
@@ -232,7 +257,7 @@ fun AddEditScheduleScreen(
                             colors = CheckboxDefaults.colors(checkedColor = AmberPrimary)
                         )
                         Text(
-                            text = "Hạn theo thời gian",
+                            text = stringResource(R.string.maint_schedule_date_condition),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -241,8 +266,8 @@ fun AddEditScheduleScreen(
                         OutlinedTextField(
                             value = state.dueDaysFromNow.toString(),
                             onValueChange = { days -> days.toIntOrNull()?.let { viewModel.onDueDaysChanged(it) } },
-                            label = { Text("Đến hạn sau (số ngày)") },
-                            suffix = { Text("ngày nữa") },
+                            label = { Text(stringResource(R.string.maint_schedule_due_days_label)) },
+                            suffix = { Text(stringResource(R.string.maint_schedule_due_days_suffix)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                             singleLine = true
@@ -264,7 +289,7 @@ fun AddEditScheduleScreen(
                             colors = CheckboxDefaults.colors(checkedColor = AmberPrimary)
                         )
                         Text(
-                            text = "Hạn theo ODO (km)",
+                            text = stringResource(R.string.maint_schedule_odo_condition),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -273,8 +298,8 @@ fun AddEditScheduleScreen(
                         OutlinedTextField(
                             value = state.dueOdoInput,
                             onValueChange = viewModel::onDueOdoChanged,
-                            label = { Text("Mốc ODO đến hạn") },
-                            suffix = { Text("km") },
+                            label = { Text(stringResource(R.string.maint_schedule_due_odo_label)) },
+                            suffix = { Text(stringResource(R.string.maint_schedule_km_suffix)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                             singleLine = true
@@ -296,7 +321,7 @@ fun AddEditScheduleScreen(
                             colors = CheckboxDefaults.colors(checkedColor = AmberPrimary)
                         )
                         Text(
-                            text = "Lịch lặp lại chu kỳ",
+                            text = stringResource(R.string.maint_schedule_recurring_condition),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -309,8 +334,8 @@ fun AddEditScheduleScreen(
                             OutlinedTextField(
                                 value = state.intervalDaysInput,
                                 onValueChange = viewModel::onIntervalDaysChanged,
-                                label = { Text("Mỗi X ngày") },
-                                suffix = { Text("ngày") },
+                                label = { Text(stringResource(R.string.maint_schedule_interval_days_label)) },
+                                suffix = { Text(stringResource(R.string.maint_schedule_days_suffix)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f),
                                 singleLine = true
@@ -318,8 +343,8 @@ fun AddEditScheduleScreen(
                             OutlinedTextField(
                                 value = state.intervalKmInput,
                                 onValueChange = viewModel::onIntervalKmChanged,
-                                label = { Text("Mỗi X km") },
-                                suffix = { Text("km") },
+                                label = { Text(stringResource(R.string.maint_schedule_interval_km_label)) },
+                                suffix = { Text(stringResource(R.string.maint_schedule_km_suffix)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f),
                                 singleLine = true
@@ -343,7 +368,11 @@ fun AddEditScheduleScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Text(
-                        text = if (isEditMode) "CẬP NHẬT LỊCH" else "LƯU LỊCH BẢO DƯỠNG",
+                        text = if (isEditMode) {
+                            stringResource(R.string.maint_schedule_save_update)
+                        } else {
+                            stringResource(R.string.maint_schedule_save_new)
+                        },
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -356,8 +385,8 @@ fun AddEditScheduleScreen(
         if (showCancelConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showCancelConfirmDialog = false },
-                title = { Text("Xác nhận hủy lịch") },
-                text = { Text("Bạn có chắc chắn muốn hủy lịch bảo dưỡng này không?") },
+                title = { Text(stringResource(R.string.maint_schedule_cancel_title)) },
+                text = { Text(stringResource(R.string.maint_schedule_cancel_message)) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -366,12 +395,12 @@ fun AddEditScheduleScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Hủy lịch")
+                        Text(stringResource(R.string.maint_schedule_cancel_confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showCancelConfirmDialog = false }) {
-                        Text("Đóng")
+                        Text(stringResource(R.string.maint_schedule_close))
                     }
                 }
             )

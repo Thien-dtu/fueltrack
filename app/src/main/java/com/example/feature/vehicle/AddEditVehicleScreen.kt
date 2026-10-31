@@ -38,11 +38,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.VehicleType
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.DarkBackground
@@ -70,7 +72,7 @@ fun AddEditVehicleScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isEditMode) "Chỉnh sửa xe" else "Thêm phương tiện mới",
+                        text = if (isEditMode) stringResource(R.string.vehicle_add_title_edit) else stringResource(R.string.vehicle_add_title_new),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -78,7 +80,7 @@ fun AddEditVehicleScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.vehicle_add_back)
                         )
                     }
                 },
@@ -98,7 +100,7 @@ fun AddEditVehicleScreen(
         ) {
             // Vehicle Type Picker
             Text(
-                text = "Loại phương tiện",
+                text = stringResource(R.string.vehicle_add_type_label),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -110,7 +112,7 @@ fun AddEditVehicleScreen(
                 FilterChip(
                     selected = state.type == VehicleType.MOTORCYCLE,
                     onClick = { viewModel.onTypeChanged(VehicleType.MOTORCYCLE) },
-                    label = { Text("Xe máy") },
+                    label = { Text(stringResource(R.string.vehicle_add_type_motorcycle)) },
                     leadingIcon = {
                         Icon(Icons.Default.TwoWheeler, contentDescription = null)
                     },
@@ -124,7 +126,7 @@ fun AddEditVehicleScreen(
                 FilterChip(
                     selected = state.type == VehicleType.CAR,
                     onClick = { viewModel.onTypeChanged(VehicleType.CAR) },
-                    label = { Text("Ô tô") },
+                    label = { Text(stringResource(R.string.vehicle_add_type_car)) },
                     leadingIcon = {
                         Icon(Icons.Default.DirectionsCar, contentDescription = null)
                     },
@@ -140,7 +142,7 @@ fun AddEditVehicleScreen(
             OutlinedTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChanged,
-                label = { Text("Tên xe (ví dụ: Honda Vision, Toyota Vios)") },
+                label = { Text(stringResource(R.string.vehicle_add_name_label)) },
                 isError = state.nameError != null,
                 supportingText = state.nameError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth().testTag("vehicle_name_input"),
@@ -160,7 +162,7 @@ fun AddEditVehicleScreen(
                 OutlinedTextField(
                     value = state.brand,
                     onValueChange = viewModel::onBrandChanged,
-                    label = { Text("Hãng (Honda, Toyota...)") },
+                    label = { Text(stringResource(R.string.vehicle_add_brand_label)) },
                     modifier = Modifier.weight(1f).testTag("vehicle_brand_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkSurface,
@@ -173,7 +175,7 @@ fun AddEditVehicleScreen(
                 OutlinedTextField(
                     value = state.model,
                     onValueChange = viewModel::onModelChanged,
-                    label = { Text("Model (Vision, Vios...)") },
+                    label = { Text(stringResource(R.string.vehicle_add_model_label)) },
                     modifier = Modifier.weight(1f).testTag("vehicle_model_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkSurface,
@@ -192,7 +194,7 @@ fun AddEditVehicleScreen(
                 OutlinedTextField(
                     value = state.yearString,
                     onValueChange = viewModel::onYearChanged,
-                    label = { Text("Năm sx") },
+                    label = { Text(stringResource(R.string.vehicle_add_year_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f).testTag("vehicle_year_input"),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -206,7 +208,7 @@ fun AddEditVehicleScreen(
                 OutlinedTextField(
                     value = state.licensePlate,
                     onValueChange = viewModel::onLicensePlateChanged,
-                    label = { Text("Biển số xe") },
+                    label = { Text(stringResource(R.string.vehicle_add_plate_label)) },
                     modifier = Modifier.weight(1.5f).testTag("vehicle_plate_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkSurface,
@@ -221,13 +223,13 @@ fun AddEditVehicleScreen(
             OutlinedTextField(
                 value = state.odoInput,
                 onValueChange = viewModel::onOdoChanged,
-                label = { Text("Chỉ số ODO hiện tại") },
+                label = { Text(stringResource(R.string.vehicle_add_odo_label)) },
                 suffix = { Text("km", fontWeight = FontWeight.Bold, color = AmberPrimary) },
                 supportingText = {
                     if (state.odoError != null) {
                         Text(state.odoError!!, color = MaterialTheme.colorScheme.error)
                     } else {
-                        Text("Nhập số nguyên hoặc tối đa 1 số thập phân (vd: 1222 hoặc 1222,4)")
+                        Text(stringResource(R.string.vehicle_add_odo_hint))
                     }
                 },
                 isError = state.odoError != null,
@@ -245,8 +247,8 @@ fun AddEditVehicleScreen(
             OutlinedTextField(
                 value = state.fuelTankCapacityString,
                 onValueChange = viewModel::onTankCapacityChanged,
-                label = { Text("Dung tích bình xăng (tùy chọn)") },
-                suffix = { Text("lít") },
+                label = { Text(stringResource(R.string.vehicle_add_tank_label)) },
+                suffix = { Text(stringResource(R.string.vehicle_add_liters_suffix)) },
                 isError = state.tankCapacityError != null,
                 supportingText = state.tankCapacityError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -276,7 +278,7 @@ fun AddEditVehicleScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Text(
-                        text = if (isEditMode) "CẬP NHẬT XE" else "LƯU XE MỚI",
+                        text = if (isEditMode) stringResource(R.string.vehicle_add_save_update) else stringResource(R.string.vehicle_add_save_new),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )

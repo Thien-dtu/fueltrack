@@ -37,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.ui.components.EmptyVehicleState
 import com.example.core.ui.components.MaintenanceEntryCard
 import com.example.core.ui.components.MaintenanceScheduleCard
@@ -136,7 +138,7 @@ fun MaintenanceDashboardScreen(
                 ) {
                     Icon(Icons.Default.Build, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Mẫu bảo dưỡng", color = CyanAccent)
+                    Text(stringResource(R.string.maint_dash_templates), color = CyanAccent)
                 }
             }
         }
@@ -155,7 +157,7 @@ fun MaintenanceDashboardScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("+ Lịch mới", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.maint_dash_new_schedule), fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -166,7 +168,7 @@ fun MaintenanceDashboardScreen(
                 ) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Ghi nhận đã làm", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.maint_dash_record_done), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -180,7 +182,7 @@ fun MaintenanceDashboardScreen(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
-                        text = "CHI PHÍ BẢO DƯỠNG THÁNG NÀY",
+                        text = stringResource(R.string.maint_dash_monthly_cost),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -199,7 +201,11 @@ fun MaintenanceDashboardScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Tổng tất cả thời gian: ${Formatters.formatCurrencyVnd(uiState.stats.totalCostVnd)} (${uiState.stats.totalEntriesCount} lần)",
+                        text = stringResource(
+                            R.string.maint_dash_total_cost,
+                            Formatters.formatCurrencyVnd(uiState.stats.totalCostVnd),
+                            uiState.stats.totalEntriesCount
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -219,7 +225,7 @@ fun MaintenanceDashboardScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Cần bảo dưỡng ngay (${uiState.dueSchedules.size})",
+                        text = stringResource(R.string.maint_dash_due_now, uiState.dueSchedules.size),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = ErrorRed
@@ -243,7 +249,7 @@ fun MaintenanceDashboardScreen(
         // Upcoming Schedules Section
         item {
             Text(
-                text = "Lịch sắp tới (${uiState.upcomingSchedules.size})",
+                text = stringResource(R.string.maint_dash_upcoming, uiState.upcomingSchedules.size),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -259,7 +265,7 @@ fun MaintenanceDashboardScreen(
                 ) {
                     Box(modifier = Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "Không có lịch bảo dưỡng sắp tới. Nhấn '+ Lịch mới' để thêm.",
+                            text = stringResource(R.string.maint_dash_no_upcoming),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -287,7 +293,7 @@ fun MaintenanceDashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Lịch sử bảo dưỡng gần đây",
+                    text = stringResource(R.string.maint_dash_recent_history),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -296,7 +302,7 @@ fun MaintenanceDashboardScreen(
                     onClick = { onNavigateToHistory(vehicle.id) },
                     modifier = Modifier.testTag("view_all_maintenance_history_button")
                 ) {
-                    Text("Xem tất cả", color = AmberPrimary)
+                    Text(stringResource(R.string.maint_dash_view_all), color = AmberPrimary)
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
@@ -316,7 +322,7 @@ fun MaintenanceDashboardScreen(
                 ) {
                     Box(modifier = Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            text = "Chưa có lịch sử bảo dưỡng nào được ghi nhận.",
+                            text = stringResource(R.string.maint_dash_no_history),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

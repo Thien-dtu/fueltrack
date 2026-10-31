@@ -37,9 +37,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.MaintenanceEntry
 import com.example.core.ui.components.MaintenanceEntryCard
 import com.example.core.ui.theme.AmberPrimary
@@ -63,9 +65,13 @@ fun MaintenanceHistoryScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Lịch sử bảo dưỡng", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.maint_history_title), fontWeight = FontWeight.Bold)
                         Text(
-                            text = "${uiState.vehicleName} • Tổng: ${Formatters.formatCurrencyVnd(uiState.totalCostVnd)}",
+                            text = stringResource(
+                                R.string.maint_history_subtitle,
+                                uiState.vehicleName,
+                                Formatters.formatCurrencyVnd(uiState.totalCostVnd)
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -75,13 +81,17 @@ fun MaintenanceHistoryScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.maint_history_back)
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToAddEntry) {
-                        Icon(Icons.Default.Add, contentDescription = "Thêm bản ghi", tint = AmberPrimary)
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.maint_history_add_entry),
+                            tint = AmberPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBackground)
@@ -100,7 +110,7 @@ fun MaintenanceHistoryScreen(
         if (uiState.entries.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "Chưa có lịch sử bảo dưỡng nào.",
+                    text = stringResource(R.string.maint_history_empty),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -118,7 +128,7 @@ fun MaintenanceHistoryScreen(
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Tổng cộng ${uiState.entries.size} lần bảo dưỡng",
+                    text = stringResource(R.string.maint_history_total, uiState.entries.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -145,8 +155,15 @@ fun MaintenanceHistoryScreen(
         if (entryToDelete != null) {
             AlertDialog(
                 onDismissRequest = { entryToDelete = null },
-                title = { Text("Xác nhận xóa") },
-                text = { Text("Bạn có chắc chắn muốn xóa bản ghi bảo dưỡng '${entryToDelete?.title}' không?") },
+                title = { Text(stringResource(R.string.maint_history_delete_title)) },
+                text = {
+                    Text(
+                        stringResource(
+                            R.string.maint_history_delete_message,
+                            entryToDelete?.title.orEmpty()
+                        )
+                    )
+                },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -155,12 +172,12 @@ fun MaintenanceHistoryScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Xóa")
+                        Text(stringResource(R.string.maint_history_delete_confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { entryToDelete = null }) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.maint_history_cancel))
                     }
                 }
             )

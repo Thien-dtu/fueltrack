@@ -42,11 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.DarkBackground
 import com.example.core.ui.theme.DarkSurface
@@ -73,9 +75,9 @@ fun AddEditMaintenanceEntryScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
     val screenTitle = when {
-        isCompleteScheduleMode -> "Xác nhận hoàn thành bảo dưỡng"
-        isEditMode -> "Chỉnh sửa bảo dưỡng"
-        else -> "Ghi nhận bảo dưỡng đã làm"
+        isCompleteScheduleMode -> stringResource(R.string.maint_entry_title_complete)
+        isEditMode -> stringResource(R.string.maint_entry_title_edit)
+        else -> stringResource(R.string.maint_entry_title_add)
     }
 
     Scaffold(
@@ -86,14 +88,18 @@ fun AddEditMaintenanceEntryScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.maint_entry_back)
                         )
                     }
                 },
                 actions = {
                     if (isEditMode) {
                         IconButton(onClick = { showDeleteConfirmDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Xóa", tint = MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.maint_entry_delete_action),
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 },
@@ -116,12 +122,13 @@ fun AddEditMaintenanceEntryScreen(
                 expanded = vehicleMenuExpanded,
                 onExpandedChange = { vehicleMenuExpanded = !vehicleMenuExpanded }
             ) {
-                val selectedVehicleName = state.vehicles.find { it.id == state.selectedVehicleId }?.name ?: "Chọn xe"
+                val selectedVehicleName = state.vehicles.find { it.id == state.selectedVehicleId }?.name
+                    ?: stringResource(R.string.maint_entry_vehicle_placeholder)
                 OutlinedTextField(
                     value = selectedVehicleName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Phương tiện") },
+                    label = { Text(stringResource(R.string.maint_entry_vehicle_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = vehicleMenuExpanded) },
                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -151,12 +158,13 @@ fun AddEditMaintenanceEntryScreen(
                     expanded = templateMenuExpanded,
                     onExpandedChange = { templateMenuExpanded = !templateMenuExpanded }
                 ) {
-                    val templateName = state.templates.find { it.id == state.selectedTemplateId }?.name ?: "Chọn từ mẫu gợi ý (tùy chọn)"
+                    val templateName = state.templates.find { it.id == state.selectedTemplateId }?.name
+                        ?: stringResource(R.string.maint_entry_template_placeholder)
                     OutlinedTextField(
                         value = templateName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Điền nhanh từ mẫu bảo dưỡng") },
+                        label = { Text(stringResource(R.string.maint_entry_template_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = templateMenuExpanded) },
                         modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -170,7 +178,15 @@ fun AddEditMaintenanceEntryScreen(
                     ) {
                         state.templates.forEach { tmpl ->
                             DropdownMenuItem(
-                                text = { Text("${tmpl.name} (${tmpl.category})") },
+                                text = {
+                                    Text(
+                                        stringResource(
+                                            R.string.maint_entry_template_item,
+                                            tmpl.name,
+                                            tmpl.category
+                                        )
+                                    )
+                                },
                                 onClick = {
                                     viewModel.onTemplateSelected(tmpl)
                                     templateMenuExpanded = false
@@ -185,7 +201,7 @@ fun AddEditMaintenanceEntryScreen(
             OutlinedTextField(
                 value = state.title,
                 onValueChange = viewModel::onTitleChanged,
-                label = { Text("Hạng mục bảo dưỡng *") },
+                label = { Text(stringResource(R.string.maint_entry_title_label)) },
                 isError = state.titleError != null,
                 supportingText = state.titleError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
                 modifier = Modifier.fillMaxWidth().testTag("maintenance_title_input"),
@@ -205,7 +221,7 @@ fun AddEditMaintenanceEntryScreen(
                 OutlinedTextField(
                     value = state.category,
                     onValueChange = viewModel::onCategoryChanged,
-                    label = { Text("Danh mục") },
+                    label = { Text(stringResource(R.string.maint_entry_category_label)) },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkSurface,
@@ -217,7 +233,7 @@ fun AddEditMaintenanceEntryScreen(
                 OutlinedTextField(
                     value = state.providerName,
                     onValueChange = viewModel::onProviderChanged,
-                    label = { Text("Gara / Đơn vị làm") },
+                    label = { Text(stringResource(R.string.maint_entry_provider_label)) },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkSurface,
@@ -235,7 +251,7 @@ fun AddEditMaintenanceEntryScreen(
                 OutlinedTextField(
                     value = state.odoInput,
                     onValueChange = viewModel::onOdoChanged,
-                    label = { Text("ODO lúc làm (km)") },
+                    label = { Text(stringResource(R.string.maint_entry_odo_label)) },
                     supportingText = state.odoError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
                     isError = state.odoError != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -251,8 +267,8 @@ fun AddEditMaintenanceEntryScreen(
                 OutlinedTextField(
                     value = state.costInput,
                     onValueChange = viewModel::onCostChanged,
-                    label = { Text("Chi phí") },
-                    suffix = { Text("đ") },
+                    label = { Text(stringResource(R.string.maint_entry_cost_label)) },
+                    suffix = { Text(stringResource(R.string.maint_entry_currency_suffix)) },
                     supportingText = state.costError?.let { { Text(it, color = MaterialTheme.colorScheme.error) } },
                     isError = state.costError != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -270,7 +286,7 @@ fun AddEditMaintenanceEntryScreen(
             OutlinedTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChanged,
-                label = { Text("Ghi chú (tùy chọn)") },
+                label = { Text(stringResource(R.string.maint_entry_note_label)) },
                 modifier = Modifier.fillMaxWidth().testTag("maintenance_note_input"),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = DarkSurface,
@@ -292,7 +308,11 @@ fun AddEditMaintenanceEntryScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Text(
-                        text = if (isEditMode) "CẬP NHẬT BẢN GHI" else "LƯU LỊCH SỬ BẢO DƯỠNG",
+                        text = if (isEditMode) {
+                            stringResource(R.string.maint_entry_save_update)
+                        } else {
+                            stringResource(R.string.maint_entry_save_new)
+                        },
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -305,8 +325,8 @@ fun AddEditMaintenanceEntryScreen(
         if (showDeleteConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirmDialog = false },
-                title = { Text("Xác nhận xóa") },
-                text = { Text("Bạn có chắc chắn muốn xóa bản ghi bảo dưỡng này không?") },
+                title = { Text(stringResource(R.string.maint_entry_delete_title)) },
+                text = { Text(stringResource(R.string.maint_entry_delete_message)) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -315,12 +335,12 @@ fun AddEditMaintenanceEntryScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
-                        Text("Xóa")
+                        Text(stringResource(R.string.maint_entry_delete_confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.maint_entry_cancel))
                     }
                 }
             )

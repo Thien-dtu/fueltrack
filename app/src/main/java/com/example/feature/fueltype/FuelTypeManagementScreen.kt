@@ -50,9 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.FuelType
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.DarkBackground
@@ -73,12 +75,12 @@ fun FuelTypeManagementScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Quản lý loại nhiên liệu", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.fuel_type_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.fuel_type_back)
                         )
                     }
                 },
@@ -115,7 +117,7 @@ fun FuelTypeManagementScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Loại nhiên liệu (${uiState.activeTypes.size})",
+                        text = stringResource(R.string.fuel_type_active_header, uiState.activeTypes.size),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -128,7 +130,7 @@ fun FuelTypeManagementScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Tạo loại mới", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.fuel_type_create), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -142,7 +144,7 @@ fun FuelTypeManagementScreen(
                         FilterChip(
                             selected = uiState.showArchived,
                             onClick = { viewModel.toggleShowArchived() },
-                            label = { Text("Đã lưu trữ (${uiState.archivedTypes.size})") },
+                            label = { Text(stringResource(R.string.fuel_type_archived_chip, uiState.archivedTypes.size)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = DarkSurfaceVariant,
                                 selectedLabelColor = AmberPrimary
@@ -170,7 +172,7 @@ fun FuelTypeManagementScreen(
             if (uiState.showArchived && uiState.archivedTypes.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Đã lưu trữ (vẫn giữ trong lịch sử cũ, không xuất hiện khi thêm mới)",
+                        text = stringResource(R.string.fuel_type_archived_header),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 10.dp)
@@ -199,7 +201,7 @@ fun FuelTypeManagementScreen(
         // Create Dialog
         if (isCreateDialogOpen) {
             FuelTypeEditDialog(
-                title = "Tạo loại nhiên liệu mới",
+                title = stringResource(R.string.fuel_type_create_title),
                 initialName = "",
                 initialDescription = "",
                 onDismiss = { isCreateDialogOpen = false },
@@ -213,7 +215,7 @@ fun FuelTypeManagementScreen(
         // Edit Dialog
         editingFuelType?.let { ft ->
             FuelTypeEditDialog(
-                title = "Chỉnh sửa loại nhiên liệu",
+                title = stringResource(R.string.fuel_type_edit_title),
                 initialName = ft.name,
                 initialDescription = ft.description,
                 onDismiss = { editingFuelType = null },
@@ -281,7 +283,7 @@ fun FuelTypeItemCard(
             IconButton(onClick = onEdit) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Sửa",
+                    contentDescription = stringResource(R.string.fuel_type_edit_action),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -289,7 +291,7 @@ fun FuelTypeItemCard(
             IconButton(onClick = onArchive) {
                 Icon(
                     imageVector = if (isArchived) Icons.Default.Unarchive else Icons.Default.Archive,
-                    contentDescription = if (isArchived) "Khôi phục" else "Lưu trữ",
+                    contentDescription = if (isArchived) stringResource(R.string.fuel_type_unarchive_action) else stringResource(R.string.fuel_type_archive_action),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -316,14 +318,14 @@ fun FuelTypeEditDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Tên loại nhiên liệu") },
+                    label = { Text(stringResource(R.string.fuel_type_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("fuel_type_dialog_name_input")
                 )
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Mô tả / ghi chú") },
+                    label = { Text(stringResource(R.string.fuel_type_desc_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -336,12 +338,12 @@ fun FuelTypeEditDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
                 modifier = Modifier.testTag("fuel_type_dialog_save_button")
             ) {
-                Text("Lưu")
+                Text(stringResource(R.string.fuel_type_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy")
+                Text(stringResource(R.string.fuel_type_cancel))
             }
         }
     )

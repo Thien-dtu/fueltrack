@@ -43,10 +43,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.Vehicle
 import com.example.core.model.VehicleType
 import com.example.core.ui.FabClearance
@@ -94,14 +96,14 @@ fun VehicleListScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Garage của bạn",
+                        text = stringResource(R.string.vehicle_list_title),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${uiState.activeVehicles.size} phương tiện đang theo dõi",
+                        text = stringResource(R.string.vehicle_list_count, uiState.activeVehicles.size),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -117,7 +119,7 @@ fun VehicleListScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Thêm xe", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.vehicle_list_add), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -132,7 +134,7 @@ fun VehicleListScreen(
                     FilterChip(
                         selected = uiState.showArchived,
                         onClick = { viewModel.toggleShowArchived() },
-                        label = { Text("Xem đã lưu trữ (${uiState.archivedVehicles.size})") },
+                        label = { Text(stringResource(R.string.vehicle_list_show_archived, uiState.archivedVehicles.size)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = DarkSurfaceVariant,
                             selectedLabelColor = AmberPrimary
@@ -160,7 +162,7 @@ fun VehicleListScreen(
         if (uiState.showArchived && uiState.archivedVehicles.isNotEmpty()) {
             item {
                 Text(
-                    text = "Xe đã lưu trữ (isArchived = true)",
+                    text = stringResource(R.string.vehicle_list_archived_header),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -248,7 +250,7 @@ fun VehicleCardItem(
                 IconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Chỉnh sửa xe",
+                        contentDescription = stringResource(R.string.vehicle_list_edit_action),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -256,7 +258,7 @@ fun VehicleCardItem(
                 IconButton(onClick = onArchive) {
                     Icon(
                         imageVector = if (isArchived) Icons.Default.Unarchive else Icons.Default.Archive,
-                        contentDescription = if (isArchived) "Khôi phục xe" else "Lưu trữ xe",
+                        contentDescription = if (isArchived) stringResource(R.string.vehicle_list_unarchive_action) else stringResource(R.string.vehicle_list_archive_action),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -284,7 +286,7 @@ fun VehicleCardItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "ODO hiện tại",
+                            text = stringResource(R.string.vehicle_list_odo_label),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -300,7 +302,7 @@ fun VehicleCardItem(
                 if (vehicle.licensePlate.isNotBlank()) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Biển số",
+                            text = stringResource(R.string.vehicle_list_plate_label),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -321,7 +323,7 @@ fun VehicleCardItem(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Xem lịch sử đổ xăng", fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.vehicle_list_view_history), fontWeight = FontWeight.Medium)
             }
         }
     }

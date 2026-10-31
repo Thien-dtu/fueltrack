@@ -28,9 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.core.model.FuelEntryWithDetails
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.CyanAccent
@@ -126,7 +128,7 @@ fun FuelEntryCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Xóa",
+                            contentDescription = stringResource(R.string.card_delete),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
@@ -172,7 +174,7 @@ fun FuelEntryCard(
                 // Liters
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "Số lít",
+                        text = stringResource(R.string.card_liters),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -187,7 +189,7 @@ fun FuelEntryCard(
                 // Price/L
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Đơn giá",
+                        text = stringResource(R.string.card_unit_price),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -250,7 +252,7 @@ fun FuelEntryCard(
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "Đầy bình",
+                                text = stringResource(R.string.card_full_tank),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SuccessGreen

@@ -30,8 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.core.model.Vehicle
 import com.example.core.model.VehicleType
 import com.example.core.ui.theme.AmberPrimary
@@ -66,13 +68,13 @@ fun VehicleSwitcher(
                 }
                 Icon(
                     imageVector = icon,
-                    contentDescription = "Loại xe",
+                    contentDescription = stringResource(R.string.vehicle_switcher_type),
                     tint = AmberPrimary,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = selectedVehicle?.name ?: "Chọn phương tiện",
+                    text = selectedVehicle?.name ?: stringResource(R.string.vehicle_switcher_placeholder),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -80,7 +82,7 @@ fun VehicleSwitcher(
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Mở danh sách xe",
+                    contentDescription = stringResource(R.string.vehicle_switcher_open),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

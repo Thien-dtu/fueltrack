@@ -50,10 +50,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.model.MaintenanceTemplate
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.CyanAccent
@@ -76,12 +78,12 @@ fun TemplateManagementScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mẫu bảo dưỡng xe", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.maint_template_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.maint_template_back)
                         )
                     }
                 },
@@ -113,7 +115,10 @@ fun TemplateManagementScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Danh sách mẫu (${uiState.builtInTemplates.size + uiState.userTemplates.size})",
+                        text = stringResource(
+                            R.string.maint_template_list_count,
+                            uiState.builtInTemplates.size + uiState.userTemplates.size
+                        ),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -127,7 +132,7 @@ fun TemplateManagementScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Tạo mẫu mới", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.maint_template_create), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -136,7 +141,7 @@ fun TemplateManagementScreen(
             if (uiState.userTemplates.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Mẫu tùy chỉnh của bạn",
+                        text = stringResource(R.string.maint_template_custom_section),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = AmberPrimary
@@ -159,7 +164,7 @@ fun TemplateManagementScreen(
             // Built-in Templates Section
             item {
                 Text(
-                    text = "Mẫu chuẩn mặc định",
+                    text = stringResource(R.string.maint_template_builtin_section),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = CyanAccent
@@ -188,7 +193,14 @@ fun TemplateManagementScreen(
                         FilterChip(
                             selected = uiState.showArchived,
                             onClick = { viewModel.toggleShowArchived() },
-                            label = { Text("Đã lưu trữ (${uiState.archivedTemplates.size})") },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        R.string.maint_template_archived_chip,
+                                        uiState.archivedTemplates.size
+                                    )
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = DarkSurfaceVariant,
                                 selectedLabelColor = AmberPrimary
@@ -221,9 +233,9 @@ fun TemplateManagementScreen(
         // Create Dialog
         if (isCreateDialogOpen) {
             TemplateEditDialog(
-                title = "Tạo mẫu bảo dưỡng mới",
+                title = stringResource(R.string.maint_template_dialog_create),
                 initialName = "",
-                initialCategory = "Bảo dưỡng",
+                initialCategory = stringResource(R.string.maint_template_default_category),
                 initialDays = "90",
                 initialKm = "2000",
                 initialDesc = "",
@@ -238,7 +250,7 @@ fun TemplateManagementScreen(
         // Edit Dialog
         editingTemplate?.let { tmpl ->
             TemplateEditDialog(
-                title = "Chỉnh sửa mẫu bảo dưỡng",
+                title = stringResource(R.string.maint_template_dialog_edit),
                 initialName = tmpl.name,
                 initialCategory = tmpl.category,
                 initialDays = tmpl.defaultIntervalDays?.toString() ?: "",
@@ -290,19 +302,31 @@ fun TemplateItemCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                val daysValue = template.defaultIntervalDays?.let {
+                    stringResource(R.string.maint_template_days_value, it)
+                }
+                val suggestionPrefix = stringResource(R.string.maint_template_suggestion_prefix)
                 val intervals = buildString {
                     append(template.category)
                     val parts = mutableListOf<String>()
-                    if (template.defaultIntervalDays != null) parts.add("${template.defaultIntervalDays} ngày")
+                    if (template.defaultIntervalDays != null) {
+                        parts.add(
+                            daysValue ?: template.defaultIntervalDays.toString()
+                        )
+                    }
                     if (template.defaultIntervalMeters != null) parts.add(Formatters.formatDistanceKm(template.defaultIntervalMeters))
-                    if (parts.isNotEmpty()) append(" • Gợi ý: ${parts.joinToString(" / ")}")
+                    if (parts.isNotEmpty()) append("$suggestionPrefix${parts.joinToString(" / ")}")
                 }
                 Text(text = intervals, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             if (onEdit != null) {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Sửa", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.maint_template_edit_action),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -310,7 +334,7 @@ fun TemplateItemCard(
                 IconButton(onClick = onArchive) {
                     Icon(
                         imageVector = if (isArchived) Icons.Default.Unarchive else Icons.Default.Archive,
-                        contentDescription = "Lưu trữ",
+                        contentDescription = stringResource(R.string.maint_template_archive_action),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -344,14 +368,14 @@ fun TemplateEditDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Tên mẫu *") },
+                    label = { Text(stringResource(R.string.maint_template_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = category,
                     onValueChange = { category = it },
-                    label = { Text("Danh mục") },
+                    label = { Text(stringResource(R.string.maint_template_category_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -359,14 +383,14 @@ fun TemplateEditDialog(
                     OutlinedTextField(
                         value = daysText,
                         onValueChange = { daysText = it.filter { c -> c.isDigit() } },
-                        label = { Text("Mỗi X ngày") },
+                        label = { Text(stringResource(R.string.maint_template_days_label)) },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = kmText,
                         onValueChange = { kmText = it.filter { c -> c.isDigit() } },
-                        label = { Text("Mỗi X km") },
+                        label = { Text(stringResource(R.string.maint_template_km_label)) },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
@@ -374,7 +398,7 @@ fun TemplateEditDialog(
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text("Mô tả") },
+                    label = { Text(stringResource(R.string.maint_template_desc_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -393,12 +417,12 @@ fun TemplateEditDialog(
                 enabled = name.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary)
             ) {
-                Text("Lưu")
+                Text(stringResource(R.string.maint_template_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy")
+                Text(stringResource(R.string.maint_template_cancel))
             }
         }
     )

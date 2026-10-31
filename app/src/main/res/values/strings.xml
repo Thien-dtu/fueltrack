@@ -1,3 +1,285 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">FuelTrack</string>
+
+    <!-- Ghi nhận / chỉnh sửa lần đổ xăng -->
+    <string name="fuel_add_title_edit">Chỉnh sửa đổ xăng</string>
+    <string name="fuel_add_title_new">Ghi nhận đổ xăng</string>
+    <string name="fuel_add_back">Quay lại</string>
+    <string name="fuel_add_delete_entry">Xóa lần đổ xăng</string>
+    <string name="fuel_add_vehicle_placeholder">Chọn xe</string>
+    <string name="fuel_add_vehicle_label">Phương tiện</string>
+    <string name="fuel_add_odo_label">Chỉ số ODO lúc đổ xăng</string>
+    <string name="fuel_add_currency_suffix">đ</string>
+    <string name="fuel_add_odo_hint">Nhập số km (hỗ trợ tối đa 1 số thập phân, vd: 1222 hoặc 1222,4)</string>
+    <string name="fuel_add_timestamp">Thời điểm đổ: %1$s</string>
+    <string name="fuel_add_fuel_type_label">Loại nhiên liệu</string>
+    <string name="fuel_add_quick_create">+ Tạo loại mới</string>
+    <string name="fuel_add_fuel_type_placeholder">Chọn loại nhiên liệu</string>
+    <string name="fuel_add_price_label">Giá / lít</string>
+    <string name="fuel_add_amount_label">Số tiền đã đổ</string>
+    <string name="fuel_add_liters_calculated">Số lít (tự động tính)</string>
+    <string name="fuel_add_liters_formula">= Số tiền / Giá mỗi lít</string>
+    <string name="fuel_add_full_tank">Đổ đầy bình xăng</string>
+    <string name="fuel_add_full_tank_hint">Cần thiết để tính chính xác mức tiêu hao L/100km</string>
+    <string name="fuel_add_note_label">Ghi chú (tùy chọn)</string>
+    <string name="fuel_add_save_update">CẬP NHẬT LẦN ĐỔ XĂNG</string>
+    <string name="fuel_add_save_new">LƯU LẦN ĐỔ XĂNG</string>
+    <string name="fuel_add_quick_type_title">Tạo loại nhiên liệu mới</string>
+    <string name="fuel_add_quick_type_name_label">Tên (ví dụ: RON 95-V, E10)</string>
+    <string name="fuel_add_quick_type_desc_label">Mô tả (tùy chọn)</string>
+    <string name="fuel_add_quick_type_confirm">Tạo &amp; Chọn</string>
+    <string name="fuel_add_cancel">Hủy</string>
+    <string name="fuel_add_delete_title">Xác nhận xóa</string>
+    <string name="fuel_add_delete_message">Bạn có chắc chắn muốn xóa bản ghi đổ xăng này không? Thống kê sẽ được tự động tính toán lại.</string>
+    <string name="fuel_add_delete_confirm">Xóa</string>
+
+    <!-- Lịch sử đổ xăng -->
+    <string name="fuel_history_title">Lịch sử đổ xăng</string>
+    <string name="fuel_history_back">Quay lại</string>
+    <string name="fuel_history_empty">Chưa có lịch sử đổ xăng cho xe này.</string>
+    <string name="fuel_history_total">Tổng cộng %1$d lần đổ xăng</string>
+    <string name="fuel_history_delete_title">Xác nhận xóa</string>
+    <string name="fuel_history_delete_message">Bạn có chắc chắn muốn xóa bản ghi đổ xăng này không?</string>
+    <string name="fuel_history_delete_confirm">Xóa</string>
+    <string name="fuel_history_cancel">Hủy</string>
+
+    <!-- Quản lý loại nhiên liệu -->
+    <string name="fuel_type_title">Quản lý loại nhiên liệu</string>
+    <string name="fuel_type_back">Quay lại</string>
+    <string name="fuel_type_active_header">Loại nhiên liệu (%1$d)</string>
+    <string name="fuel_type_create">Tạo loại mới</string>
+    <string name="fuel_type_archived_chip">Đã lưu trữ (%1$d)</string>
+    <string name="fuel_type_archived_header">Đã lưu trữ (vẫn giữ trong lịch sử cũ, không xuất hiện khi thêm mới)</string>
+    <string name="fuel_type_create_title">Tạo loại nhiên liệu mới</string>
+    <string name="fuel_type_edit_title">Chỉnh sửa loại nhiên liệu</string>
+    <string name="fuel_type_edit_action">Sửa</string>
+    <string name="fuel_type_unarchive_action">Khôi phục</string>
+    <string name="fuel_type_archive_action">Lưu trữ</string>
+    <string name="fuel_type_name_label">Tên loại nhiên liệu</string>
+    <string name="fuel_type_desc_label">Mô tả / ghi chú</string>
+    <string name="fuel_type_save">Lưu</string>
+    <string name="fuel_type_cancel">Hủy</string>
+
+    <!-- Thêm / chỉnh sửa phương tiện -->
+    <string name="vehicle_add_title_edit">Chỉnh sửa xe</string>
+    <string name="vehicle_add_title_new">Thêm phương tiện mới</string>
+    <string name="vehicle_add_back">Quay lại</string>
+    <string name="vehicle_add_type_label">Loại phương tiện</string>
+    <string name="vehicle_add_type_motorcycle">Xe máy</string>
+    <string name="vehicle_add_type_car">Ô tô</string>
+    <string name="vehicle_add_name_label">Tên xe (ví dụ: Honda Vision, Toyota Vios)</string>
+    <string name="vehicle_add_brand_label">Hãng (Honda, Toyota…)</string>
+    <string name="vehicle_add_model_label">Model (Vision, Vios…)</string>
+    <string name="vehicle_add_year_label">Năm sx</string>
+    <string name="vehicle_add_plate_label">Biển số xe</string>
+    <string name="vehicle_add_odo_label">Chỉ số ODO hiện tại</string>
+    <string name="vehicle_add_odo_hint">Nhập số nguyên hoặc tối đa 1 số thập phân (vd: 1222 hoặc 1222,4)</string>
+    <string name="vehicle_add_tank_label">Dung tích bình xăng (tùy chọn)</string>
+    <string name="vehicle_add_liters_suffix">lít</string>
+    <string name="vehicle_add_save_update">CẬP NHẬT XE</string>
+    <string name="vehicle_add_save_new">LƯU XE MỚI</string>
+
+    <!-- Danh sách phương tiện -->
+    <string name="vehicle_list_title">Garage của bạn</string>
+    <string name="vehicle_list_count">%1$d phương tiện đang theo dõi</string>
+    <string name="vehicle_list_add">Thêm xe</string>
+    <string name="vehicle_list_show_archived">Xem đã lưu trữ (%1$d)</string>
+    <string name="vehicle_list_archived_header">Xe đã lưu trữ (isArchived = true)</string>
+    <string name="vehicle_list_edit_action">Chỉnh sửa xe</string>
+    <string name="vehicle_list_unarchive_action">Khôi phục xe</string>
+    <string name="vehicle_list_archive_action">Lưu trữ xe</string>
+    <string name="vehicle_list_odo_label">ODO hiện tại</string>
+    <string name="vehicle_list_plate_label">Biển số</string>
+    <string name="vehicle_list_view_history">Xem lịch sử đổ xăng</string>
+
+    <!-- Bảo dưỡng: ghi nhận / chỉnh sửa lần bảo dưỡng -->
+    <string name="maint_entry_title_complete">Xác nhận hoàn thành bảo dưỡng</string>
+    <string name="maint_entry_title_edit">Chỉnh sửa bảo dưỡng</string>
+    <string name="maint_entry_title_add">Ghi nhận bảo dưỡng đã làm</string>
+    <string name="maint_entry_back">Quay lại</string>
+    <string name="maint_entry_delete_action">Xóa</string>
+    <string name="maint_entry_vehicle_placeholder">Chọn xe</string>
+    <string name="maint_entry_vehicle_label">Phương tiện</string>
+    <string name="maint_entry_template_placeholder">Chọn từ mẫu gợi ý (tùy chọn)</string>
+    <string name="maint_entry_template_label">Điền nhanh từ mẫu bảo dưỡng</string>
+    <string name="maint_entry_template_item">%1$s (%2$s)</string>
+    <string name="maint_entry_title_label">Hạng mục bảo dưỡng *</string>
+    <string name="maint_entry_category_label">Danh mục</string>
+    <string name="maint_entry_provider_label">Gara / Đơn vị làm</string>
+    <string name="maint_entry_odo_label">ODO lúc làm (km)</string>
+    <string name="maint_entry_cost_label">Chi phí</string>
+    <string name="maint_entry_currency_suffix">đ</string>
+    <string name="maint_entry_note_label">Ghi chú (tùy chọn)</string>
+    <string name="maint_entry_save_update">CẬP NHẬT BẢN GHI</string>
+    <string name="maint_entry_save_new">LƯU LỊCH SỬ BẢO DƯỠNG</string>
+    <string name="maint_entry_delete_title">Xác nhận xóa</string>
+    <string name="maint_entry_delete_message">Bạn có chắc chắn muốn xóa bản ghi bảo dưỡng này không?</string>
+    <string name="maint_entry_delete_confirm">Xóa</string>
+    <string name="maint_entry_cancel">Hủy</string>
+
+    <!-- Bảo dưỡng: thêm / chỉnh sửa lịch -->
+    <string name="maint_schedule_title_edit">Chỉnh sửa lịch bảo dưỡng</string>
+    <string name="maint_schedule_title_new">Thêm lịch bảo dưỡng mới</string>
+    <string name="maint_schedule_back">Quay lại</string>
+    <string name="maint_schedule_cancel_action">Hủy lịch</string>
+    <string name="maint_schedule_vehicle_placeholder">Chọn xe</string>
+    <string name="maint_schedule_vehicle_label">Phương tiện</string>
+    <string name="maint_schedule_template_placeholder">Chọn từ mẫu gợi ý (tùy chọn)</string>
+    <string name="maint_schedule_template_label">Điền nhanh từ mẫu có sẵn</string>
+    <string name="maint_schedule_template_item">%1$s (%2$s)</string>
+    <string name="maint_schedule_title_label">Tên lịch bảo dưỡng *</string>
+    <string name="maint_schedule_category_label">Danh mục</string>
+    <string name="maint_schedule_date_condition">Hạn theo thời gian</string>
+    <string name="maint_schedule_due_days_label">Đến hạn sau (số ngày)</string>
+    <string name="maint_schedule_due_days_suffix">ngày nữa</string>
+    <string name="maint_schedule_odo_condition">Hạn theo ODO (km)</string>
+    <string name="maint_schedule_due_odo_label">Mốc ODO đến hạn</string>
+    <string name="maint_schedule_km_suffix">km</string>
+    <string name="maint_schedule_recurring_condition">Lịch lặp lại chu kỳ</string>
+    <string name="maint_schedule_interval_days_label">Mỗi X ngày</string>
+    <string name="maint_schedule_days_suffix">ngày</string>
+    <string name="maint_schedule_interval_km_label">Mỗi X km</string>
+    <string name="maint_schedule_save_update">CẬP NHẬT LỊCH</string>
+    <string name="maint_schedule_save_new">LƯU LỊCH BẢO DƯỠNG</string>
+    <string name="maint_schedule_cancel_title">Xác nhận hủy lịch</string>
+    <string name="maint_schedule_cancel_message">Bạn có chắc chắn muốn hủy lịch bảo dưỡng này không?</string>
+    <string name="maint_schedule_cancel_confirm">Hủy lịch</string>
+    <string name="maint_schedule_close">Đóng</string>
+
+    <!-- Bảo dưỡng: dashboard -->
+    <string name="maint_dash_templates">Mẫu bảo dưỡng</string>
+    <string name="maint_dash_new_schedule">+ Lịch mới</string>
+    <string name="maint_dash_record_done">Ghi nhận đã làm</string>
+    <string name="maint_dash_monthly_cost">CHI PHÍ BẢO DƯỠNG THÁNG NÀY</string>
+    <string name="maint_dash_total_cost">Tổng tất cả thời gian: %1$s (%2$d lần)</string>
+    <string name="maint_dash_due_now">Cần bảo dưỡng ngay (%1$d)</string>
+    <string name="maint_dash_upcoming">Lịch sắp tới (%1$d)</string>
+    <string name="maint_dash_no_upcoming">Không có lịch bảo dưỡng sắp tới. Nhấn \'+ Lịch mới\' để thêm.</string>
+    <string name="maint_dash_recent_history">Lịch sử bảo dưỡng gần đây</string>
+    <string name="maint_dash_view_all">Xem tất cả</string>
+    <string name="maint_dash_no_history">Chưa có lịch sử bảo dưỡng nào được ghi nhận.</string>
+
+    <!-- Bảo dưỡng: lịch sử -->
+    <string name="maint_history_title">Lịch sử bảo dưỡng</string>
+    <string name="maint_history_subtitle">%1$s • Tổng: %2$s</string>
+    <string name="maint_history_back">Quay lại</string>
+    <string name="maint_history_add_entry">Thêm bản ghi</string>
+    <string name="maint_history_empty">Chưa có lịch sử bảo dưỡng nào.</string>
+    <string name="maint_history_total">Tổng cộng %1$d lần bảo dưỡng</string>
+    <string name="maint_history_delete_title">Xác nhận xóa</string>
+    <string name="maint_history_delete_message">Bạn có chắc chắn muốn xóa bản ghi bảo dưỡng \'%1$s\' không?</string>
+    <string name="maint_history_delete_confirm">Xóa</string>
+    <string name="maint_history_cancel">Hủy</string>
+
+    <!-- Bảo dưỡng: mẫu bảo dưỡng -->
+    <string name="maint_template_title">Mẫu bảo dưỡng xe</string>
+    <string name="maint_template_back">Quay lại</string>
+    <string name="maint_template_list_count">Danh sách mẫu (%1$d)</string>
+    <string name="maint_template_create">Tạo mẫu mới</string>
+    <string name="maint_template_custom_section">Mẫu tùy chỉnh của bạn</string>
+    <string name="maint_template_builtin_section">Mẫu chuẩn mặc định</string>
+    <string name="maint_template_archived_chip">Đã lưu trữ (%1$d)</string>
+    <string name="maint_template_dialog_create">Tạo mẫu bảo dưỡng mới</string>
+    <string name="maint_template_dialog_edit">Chỉnh sửa mẫu bảo dưỡng</string>
+    <string name="maint_template_default_category">Bảo dưỡng</string>
+    <string name="maint_template_days_value" tools:ignore="PluralsCandidate">%1$d ngày</string>
+    <string name="maint_template_suggestion_prefix">\u0020• Gợi ý:\u0020</string>
+    <string name="maint_template_edit_action">Sửa</string>
+    <string name="maint_template_archive_action">Lưu trữ</string>
+    <string name="maint_template_name_label">Tên mẫu *</string>
+    <string name="maint_template_category_label">Danh mục</string>
+    <string name="maint_template_days_label">Mỗi X ngày</string>
+    <string name="maint_template_km_label">Mỗi X km</string>
+    <string name="maint_template_desc_label">Mô tả</string>
+    <string name="maint_template_save">Lưu</string>
+    <string name="maint_template_cancel">Hủy</string>
+
+    <!-- Cài đặt -->
+    <string name="settings_title">Cài đặt &amp; Tùy chọn</string>
+    <string name="settings_subtitle">Tuỳ chỉnh danh mục, mẫu bảo dưỡng và dữ liệu</string>
+    <string name="settings_fuel_types_title">Quản lý loại nhiên liệu</string>
+    <string name="settings_fuel_types_desc">Tạo, sửa hoặc lưu trữ các loại xăng/dầu</string>
+    <string name="settings_maintenance_templates_title">Mẫu hạng mục bảo dưỡng</string>
+    <string name="settings_maintenance_templates_desc">Quản lý các mẫu nhắc lịch bảo dưỡng định kỳ</string>
+    <string name="settings_units_section">Đơn vị tiêu chuẩn</string>
+    <string name="settings_unit_currency_title">Đơn vị tiền tệ</string>
+    <string name="settings_unit_currency_value">VND (đ)</string>
+    <string name="settings_unit_distance_title">Đơn vị khoảng cách</string>
+    <string name="settings_unit_distance_value">Kilomet (km) / mét</string>
+    <string name="settings_unit_fuel_title">Đơn vị nhiên liệu</string>
+    <string name="settings_unit_fuel_value">Lít (L)</string>
+    <string name="settings_unit_consumption_title">Mức tiêu hao</string>
+    <string name="settings_unit_consumption_value">L / 100km &amp; km / L</string>
+    <string name="settings_sample_data_section">Dữ liệu mẫu (Demo)</string>
+    <string name="settings_sample_data_title">Khởi tạo dữ liệu thử nghiệm</string>
+    <string name="settings_sample_data_desc">Tự động thêm xe mẫu (Honda Vision, Toyota Vios) và các bản ghi đổ xăng để kiểm tra ngay tính năng tính tiêu hao, ODO và thống kê.</string>
+    <string name="settings_sample_loaded">Đã nạp dữ liệu mẫu</string>
+    <string name="settings_sample_already_has_data">Đã có dữ liệu, không ghi đè</string>
+    <string name="settings_sample_load">Nạp dữ liệu mẫu ngay</string>
+    <string name="settings_about_desc">Ứng dụng theo dõi chi phí và tiêu hao nhiên liệu cá nhân, 100\% offline-first, bảo mật và lưu trữ độc lập trên thiết bị.</string>
+
+    <!-- Thống kê -->
+    <string name="stats_empty_vehicles">Thêm phương tiện để xem thống kê</string>
+    <string name="stats_title">Thống kê</string>
+    <string name="stats_all_time_overview">TỔNG QUAN TẤT CẢ THỜI GIAN</string>
+    <string name="stats_distance">Quãng đường</string>
+    <string name="stats_fuel">Nhiên liệu</string>
+    <string name="stats_fuel_cost">Chi phí nhiên liệu</string>
+    <string name="stats_monthly_section">Thống kê theo tháng</string>
+    <string name="stats_monthly_empty">Chưa có đủ dữ liệu theo tháng cho xe này.</string>
+    <string name="stats_entries_count">%1$d lần đổ</string>
+    <string name="stats_cost">Chi phí</string>
+    <string name="stats_consumption_label">Tiêu hao:\u0020</string>
+    <string name="stats_cost_label">Chi phí:\u0020</string>
+    <string name="stats_not_enough_data">Chưa đủ dữ liệu</string>
+
+    <!-- Thanh dieu huong duoi -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_garage">Garage</string>
+    <string name="nav_maintenance">Bảo dưỡng</string>
+    <string name="nav_statistics">Thống kê</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_add_fuel">Thêm lần đổ xăng</string>
+
+    <!-- Trang chu -->
+    <string name="dashboard_fuel_section">Đổ xăng</string>
+    <string name="dashboard_plate">Biển số: %1$s</string>
+    <string name="dashboard_no_month_data">Chưa có dữ liệu tháng</string>
+    <string name="dashboard_this_month">Tháng này (%1$s)</string>
+    <string name="dashboard_latest_month">Gần nhất (%1$s)</string>
+    <string name="dashboard_avg_consumption">Mức tiêu hao bình quân</string>
+    <string name="dashboard_cost_per_km">Chi phí / km</string>
+    <string name="dashboard_cost_per_km_value">%1$s/km</string>
+    <string name="dashboard_stat_distance">Quãng đường</string>
+    <string name="dashboard_stat_fuel">Nhiên liệu</string>
+    <string name="dashboard_stat_cost">Chi phí</string>
+    <string name="dashboard_recent_history">Lịch sử gần đây</string>
+    <string name="dashboard_view_all">Xem tất cả</string>
+    <string name="dashboard_empty_entries">Chưa có dữ liệu đổ xăng.</string>
+    <string name="dashboard_empty_hint">Hãy ghi nhận lần đổ xăng đầu tiên để theo dõi tiêu hao.</string>
+    <string name="dashboard_add_fuel_now">Ghi nhận đổ xăng ngay</string>
+
+    <!-- Trang thai rong -->
+    <string name="empty_vehicle_title">Bạn chưa có phương tiện nào.</string>
+    <string name="empty_vehicle_description">Thêm chiếc xe đầu tiên để bắt đầu theo dõi chi phí, lịch bảo dưỡng và nhiên liệu.</string>
+    <string name="empty_vehicle_add">Thêm phương tiện</string>
+
+    <!-- The hien thi dung chung -->
+    <string name="card_delete">Xóa</string>
+    <string name="card_liters">Số lít</string>
+    <string name="card_unit_price">Đơn giá</string>
+    <string name="card_full_tank">Đầy bình</string>
+    <string name="vehicle_switcher_type">Loại xe</string>
+    <string name="vehicle_switcher_placeholder">Chọn phương tiện</string>
+    <string name="vehicle_switcher_open">Mở danh sách xe</string>
+
+    <!-- The bao duong -->
+    <string name="maint_card_repeat_prefix">Lặp lại mỗi:\u0020</string>
+    <string name="maint_card_repeat_days" tools:ignore="PluralsCandidate">%1$d ngày</string>
+    <string name="maint_card_repeat_or"> hoặc </string>
+    <string name="maint_card_mark_done">Đánh dấu hoàn thành &amp; ghi lịch sử</string>
+    <string name="maint_card_unknown_cost">Chưa rõ chi phí</string>
+    <string name="maint_card_no_odo">Không ghi ODO</string>
+    <string name="maint_card_provider">Gara: %1$s</string>
+    <string name="maint_card_note">Ghi chú: %1$s</string>
 </resources>

@@ -35,9 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.core.model.MaintenanceDueStatus
 import com.example.core.model.MaintenanceEntry
 import com.example.core.model.MaintenanceScheduleWithStatus
@@ -140,12 +142,19 @@ fun MaintenanceScheduleCard(
             // Recurring Tag
             if (schedule.intervalDays != null || schedule.intervalMeters != null) {
                 Spacer(modifier = Modifier.height(6.dp))
+                // Compose calls are hoisted out of buildString so the lambda only
+                // deals with plain strings.
+                val repeatPrefix = stringResource(R.string.maint_card_repeat_prefix)
+                val repeatSeparator = stringResource(R.string.maint_card_repeat_or)
+                val daysPart = schedule.intervalDays?.let {
+                    stringResource(R.string.maint_card_repeat_days, it)
+                }
                 val intervalInfo = buildString {
-                    append("Lặp lại mỗi: ")
+                    append(repeatPrefix)
                     val parts = mutableListOf<String>()
-                    if (schedule.intervalDays != null) parts.add("${schedule.intervalDays} ngày")
+                    if (daysPart != null) parts.add(daysPart)
                     if (schedule.intervalMeters != null) parts.add(Formatters.formatDistanceKm(schedule.intervalMeters))
-                    append(parts.joinToString(" hoặc "))
+                    append(parts.joinToString(repeatSeparator))
                 }
                 Text(
                     text = intervalInfo,
@@ -171,7 +180,7 @@ fun MaintenanceScheduleCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Đánh dấu hoàn thành & ghi lịch sử", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.maint_card_mark_done), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -230,7 +239,8 @@ fun MaintenanceEntryCard(
                 }
 
                 Text(
-                    text = entry.cost?.let { Formatters.formatCurrencyVnd(it) } ?: "Chưa rõ chi phí",
+                    text = entry.cost?.let { Formatters.formatCurrencyVnd(it) }
+                        ?: stringResource(R.string.maint_card_unknown_cost),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (entry.cost != null) AmberPrimary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -243,7 +253,7 @@ fun MaintenanceEntryCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Xóa",
+                            contentDescription = stringResource(R.string.card_delete),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
@@ -280,7 +290,7 @@ fun MaintenanceEntryCard(
                     }
                 } else {
                     Text(
-                        text = "Không ghi ODO",
+                        text = stringResource(R.string.maint_card_no_odo),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -288,7 +298,7 @@ fun MaintenanceEntryCard(
 
                 if (entry.providerName.isNotBlank()) {
                     Text(
-                        text = "Gara: ${entry.providerName}",
+                        text = stringResource(R.string.maint_card_provider, entry.providerName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -298,7 +308,7 @@ fun MaintenanceEntryCard(
             if (entry.note.isNotBlank()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Ghi chú: ${entry.note}",
+                    text = stringResource(R.string.maint_card_note, entry.note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

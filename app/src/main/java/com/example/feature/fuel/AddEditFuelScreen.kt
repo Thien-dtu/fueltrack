@@ -59,11 +59,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.CyanAccent
 import com.example.core.ui.theme.DarkBackground
@@ -103,7 +105,7 @@ fun AddEditFuelScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (isEditMode) "Chỉnh sửa đổ xăng" else "Ghi nhận đổ xăng",
+                        text = if (isEditMode) stringResource(R.string.fuel_add_title_edit) else stringResource(R.string.fuel_add_title_new),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -111,7 +113,7 @@ fun AddEditFuelScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.fuel_add_back)
                         )
                     }
                 },
@@ -123,7 +125,7 @@ fun AddEditFuelScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Xóa lần đổ xăng",
+                                contentDescription = stringResource(R.string.fuel_add_delete_entry),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -148,12 +150,12 @@ fun AddEditFuelScreen(
                 expanded = vehicleMenuExpanded,
                 onExpandedChange = { vehicleMenuExpanded = !vehicleMenuExpanded }
             ) {
-                val selectedVehicleName = state.vehicles.find { it.id == state.selectedVehicleId }?.name ?: "Chọn xe"
+                val selectedVehicleName = state.vehicles.find { it.id == state.selectedVehicleId }?.name ?: stringResource(R.string.fuel_add_vehicle_placeholder)
                 OutlinedTextField(
                     value = selectedVehicleName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Phương tiện") },
+                    label = { Text(stringResource(R.string.fuel_add_vehicle_label)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = vehicleMenuExpanded) },
                     modifier = Modifier
                         .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -185,13 +187,13 @@ fun AddEditFuelScreen(
             OutlinedTextField(
                 value = state.odoInput,
                 onValueChange = viewModel::onOdoChanged,
-                label = { Text("Chỉ số ODO lúc đổ xăng") },
+                label = { Text(stringResource(R.string.fuel_add_odo_label)) },
                 suffix = { Text("km", fontWeight = FontWeight.Bold, color = AmberPrimary) },
                 supportingText = {
                     if (state.odoError != null) {
                         Text(state.odoError!!, color = MaterialTheme.colorScheme.error)
                     } else {
-                        Text("Nhập số km (hỗ trợ tối đa 1 số thập phân, vd: 1222 hoặc 1222,4)")
+                        Text(stringResource(R.string.fuel_add_odo_hint))
                     }
                 },
                 isError = state.odoError != null,
@@ -242,7 +244,7 @@ fun AddEditFuelScreen(
                     .fillMaxWidth()
                     .testTag("fuel_timestamp_picker")
             ) {
-                Text("Thời điểm đổ: ${dateFormatter.format(Date(state.timestamp))}")
+                Text(stringResource(R.string.fuel_add_timestamp, dateFormatter.format(Date(state.timestamp))))
             }
 
             // Warning if ODO decreased
@@ -279,7 +281,7 @@ fun AddEditFuelScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Loại nhiên liệu",
+                        text = stringResource(R.string.fuel_add_fuel_type_label),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -290,7 +292,7 @@ fun AddEditFuelScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("+ Tạo loại mới", color = AmberPrimary, fontSize = 13.sp)
+                        Text(stringResource(R.string.fuel_add_quick_create), color = AmberPrimary, fontSize = 13.sp)
                     }
                 }
 
@@ -298,7 +300,7 @@ fun AddEditFuelScreen(
                     expanded = fuelTypeMenuExpanded,
                     onExpandedChange = { fuelTypeMenuExpanded = !fuelTypeMenuExpanded }
                 ) {
-                    val selectedFuelTypeName = state.fuelTypes.find { it.id == state.selectedFuelTypeId }?.name ?: "Chọn loại nhiên liệu"
+                    val selectedFuelTypeName = state.fuelTypes.find { it.id == state.selectedFuelTypeId }?.name ?: stringResource(R.string.fuel_add_fuel_type_placeholder)
                     OutlinedTextField(
                         value = selectedFuelTypeName,
                         onValueChange = {},
@@ -339,8 +341,8 @@ fun AddEditFuelScreen(
                 OutlinedTextField(
                     value = state.pricePerLiterInput,
                     onValueChange = viewModel::onPriceChanged,
-                    label = { Text("Giá / lít") },
-                    suffix = { Text("đ") },
+                    label = { Text(stringResource(R.string.fuel_add_price_label)) },
+                    suffix = { Text(stringResource(R.string.fuel_add_currency_suffix)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = state.priceError != null,
                     modifier = Modifier
@@ -357,8 +359,8 @@ fun AddEditFuelScreen(
                 OutlinedTextField(
                     value = state.amountPaidInput,
                     onValueChange = viewModel::onAmountPaidChanged,
-                    label = { Text("Số tiền đã đổ") },
-                    suffix = { Text("đ") },
+                    label = { Text(stringResource(R.string.fuel_add_amount_label)) },
+                    suffix = { Text(stringResource(R.string.fuel_add_currency_suffix)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     isError = state.amountError != null,
                     modifier = Modifier
@@ -388,7 +390,7 @@ fun AddEditFuelScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Số lít (tự động tính)",
+                            text = stringResource(R.string.fuel_add_liters_calculated),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -402,7 +404,7 @@ fun AddEditFuelScreen(
                     }
 
                     Text(
-                        text = "= Số tiền / Giá mỗi lít",
+                        text = stringResource(R.string.fuel_add_liters_formula),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -427,13 +429,13 @@ fun AddEditFuelScreen(
                 Spacer(modifier = Modifier.width(4.dp))
                 Column {
                     Text(
-                        text = "Đổ đầy bình xăng",
+                        text = stringResource(R.string.fuel_add_full_tank),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Cần thiết để tính chính xác mức tiêu hao L/100km",
+                        text = stringResource(R.string.fuel_add_full_tank_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -444,7 +446,7 @@ fun AddEditFuelScreen(
             OutlinedTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChanged,
-                label = { Text("Ghi chú (tùy chọn)") },
+                label = { Text(stringResource(R.string.fuel_add_note_label)) },
                 modifier = Modifier.fillMaxWidth().testTag("fuel_note_input"),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = DarkSurface,
@@ -470,7 +472,7 @@ fun AddEditFuelScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Text(
-                        text = if (isEditMode) "CẬP NHẬT LẦN ĐỔ XĂNG" else "LƯU LẦN ĐỔ XĂNG",
+                        text = if (isEditMode) stringResource(R.string.fuel_add_save_update) else stringResource(R.string.fuel_add_save_new),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -487,20 +489,20 @@ fun AddEditFuelScreen(
 
             AlertDialog(
                 onDismissRequest = { viewModel.setShowQuickCreateFuelType(false) },
-                title = { Text("Tạo loại nhiên liệu mới") },
+                title = { Text(stringResource(R.string.fuel_add_quick_type_title)) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
                             value = newTypeName,
                             onValueChange = { newTypeName = it },
-                            label = { Text("Tên (ví dụ: RON 95-V, E10)") },
+                            label = { Text(stringResource(R.string.fuel_add_quick_type_name_label)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth().testTag("quick_fuel_type_name_input")
                         )
                         OutlinedTextField(
                             value = newTypeDesc,
                             onValueChange = { newTypeDesc = it },
-                            label = { Text("Mô tả (tùy chọn)") },
+                            label = { Text(stringResource(R.string.fuel_add_quick_type_desc_label)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -515,12 +517,12 @@ fun AddEditFuelScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = AmberPrimary),
                         modifier = Modifier.testTag("quick_save_fuel_type_button")
                     ) {
-                        Text("Tạo & Chọn")
+                        Text(stringResource(R.string.fuel_add_quick_type_confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { viewModel.setShowQuickCreateFuelType(false) }) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.fuel_add_cancel))
                     }
                 }
             )
@@ -530,8 +532,8 @@ fun AddEditFuelScreen(
         if (showDeleteConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirmDialog = false },
-                title = { Text("Xác nhận xóa") },
-                text = { Text("Bạn có chắc chắn muốn xóa bản ghi đổ xăng này không? Thống kê sẽ được tự động tính toán lại.") },
+                title = { Text(stringResource(R.string.fuel_add_delete_title)) },
+                text = { Text(stringResource(R.string.fuel_add_delete_message)) },
                 confirmButton = {
                     Button(
                         onClick = {
@@ -541,12 +543,12 @@ fun AddEditFuelScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         modifier = Modifier.testTag("confirm_delete_fuel_button")
                     ) {
-                        Text("Xóa")
+                        Text(stringResource(R.string.fuel_add_delete_confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.fuel_add_cancel))
                     }
                 }
             )

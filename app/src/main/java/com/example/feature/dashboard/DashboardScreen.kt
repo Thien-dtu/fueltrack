@@ -39,11 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.ui.components.EmptyVehicleState
 import com.example.core.ui.components.FuelEntryCard
 import com.example.core.ui.components.VehicleSwitcher
@@ -117,7 +119,7 @@ fun DashboardScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Đổ xăng", fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.dashboard_fuel_section), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -172,7 +174,7 @@ fun DashboardScreen(
 
                     if (vehicle.licensePlate.isNotBlank()) {
                         Text(
-                            text = "Biển số: ${vehicle.licensePlate}",
+                            text = stringResource(R.string.dashboard_plate, vehicle.licensePlate),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -186,11 +188,12 @@ fun DashboardScreen(
             val statsMonthLabel = uiState.currentMonthStats?.displayName
             Text(
                 text = when {
-                    statsMonthLabel == null -> "Chưa có dữ liệu tháng"
+                    statsMonthLabel == null -> stringResource(R.string.dashboard_no_month_data)
                     // The stats may describe an earlier month when the current one has no
                     // entries yet; label it honestly instead of calling it "this month".
-                    uiState.statsAreForCurrentMonth -> "Tháng này ($statsMonthLabel)"
-                    else -> "Gần nhất ($statsMonthLabel)"
+                    uiState.statsAreForCurrentMonth ->
+                        stringResource(R.string.dashboard_this_month, statsMonthLabel)
+                    else -> stringResource(R.string.dashboard_latest_month, statsMonthLabel)
                 },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
@@ -213,7 +216,7 @@ fun DashboardScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Mức tiêu hao bình quân",
+                            text = stringResource(R.string.dashboard_avg_consumption),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -228,14 +231,21 @@ fun DashboardScreen(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Chi phí / km",
+                            text = stringResource(R.string.dashboard_cost_per_km),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         val costPerKm = uiState.currentMonthStats?.averageCostPerKmVnd
                         Text(
-                            text = if (costPerKm != null) "${Formatters.formatCurrencyVnd(costPerKm.toLong())}/km" else "Chưa đủ dữ liệu",
+                            text = if (costPerKm != null) {
+                                stringResource(
+                                    R.string.dashboard_cost_per_km_value,
+                                    Formatters.formatCurrencyVnd(costPerKm.toLong())
+                                )
+                            } else {
+                                stringResource(R.string.stats_not_enough_data)
+                            },
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AmberPrimary
@@ -254,7 +264,7 @@ fun DashboardScreen(
             ) {
                 // Distance
                 DashboardStatSmallCard(
-                    title = "Quãng đường",
+                    title = stringResource(R.string.dashboard_stat_distance),
                     value = Formatters.formatDistanceKm(stats?.totalDistanceMeters ?: 0L),
                     accentColor = CyanAccent,
                     modifier = Modifier.weight(1f)
@@ -262,7 +272,7 @@ fun DashboardScreen(
 
                 // Liters
                 DashboardStatSmallCard(
-                    title = "Nhiên liệu",
+                    title = stringResource(R.string.dashboard_stat_fuel),
                     value = Formatters.formatLiters(stats?.totalFuelLiters ?: 0.0),
                     accentColor = AmberPrimary,
                     modifier = Modifier.weight(1f)
@@ -270,7 +280,7 @@ fun DashboardScreen(
 
                 // Cost
                 DashboardStatSmallCard(
-                    title = "Chi phí",
+                    title = stringResource(R.string.dashboard_stat_cost),
                     value = Formatters.formatCurrencyVnd(stats?.totalCostVnd ?: 0L),
                     accentColor = SuccessGreen,
                     modifier = Modifier.weight(1f)
@@ -286,7 +296,7 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Lịch sử gần đây",
+                    text = stringResource(R.string.dashboard_recent_history),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -295,7 +305,7 @@ fun DashboardScreen(
                     onClick = { onNavigateToHistory(vehicle.id) },
                     modifier = Modifier.testTag("view_all_history_button")
                 ) {
-                    Text(text = "Xem tất cả", color = AmberPrimary)
+                    Text(text = stringResource(R.string.dashboard_view_all), color = AmberPrimary)
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
@@ -327,13 +337,13 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Chưa có dữ liệu đổ xăng.",
+                            text = stringResource(R.string.dashboard_empty_entries),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Hãy ghi nhận lần đổ xăng đầu tiên để theo dõi tiêu hao.",
+                            text = stringResource(R.string.dashboard_empty_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -345,7 +355,7 @@ fun DashboardScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Ghi nhận đổ xăng ngay")
+                            Text(stringResource(R.string.dashboard_add_fuel_now))
                         }
                     }
                 }

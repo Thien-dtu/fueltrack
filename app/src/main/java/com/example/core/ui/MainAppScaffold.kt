@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -38,6 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.R
 import com.example.core.navigation.Screen
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.DarkBackground
@@ -102,35 +104,35 @@ fun MainAppScaffold(
     val bottomNavItems = listOf(
         BottomNavItem(
             route = Screen.Dashboard.route,
-            label = "Trang chủ",
+            label = stringResource(R.string.nav_home),
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
             testTag = "nav_home"
         ),
         BottomNavItem(
             route = Screen.Vehicles.route,
-            label = "Garage",
+            label = stringResource(R.string.nav_garage),
             selectedIcon = Icons.Filled.DirectionsCar,
             unselectedIcon = Icons.Outlined.DirectionsCar,
             testTag = "nav_garage"
         ),
         BottomNavItem(
             route = Screen.Maintenance.route,
-            label = "Bảo dưỡng",
+            label = stringResource(R.string.nav_maintenance),
             selectedIcon = Icons.Filled.Build,
             unselectedIcon = Icons.Outlined.Build,
             testTag = "nav_maintenance"
         ),
         BottomNavItem(
             route = Screen.Statistics.route,
-            label = "Thống kê",
+            label = stringResource(R.string.nav_statistics),
             selectedIcon = Icons.Filled.BarChart,
             unselectedIcon = Icons.Outlined.BarChart,
             testTag = "nav_statistics"
         ),
         BottomNavItem(
             route = Screen.Settings.route,
-            label = "Cài đặt",
+            label = stringResource(R.string.nav_settings),
             selectedIcon = Icons.Filled.Settings,
             unselectedIcon = Icons.Outlined.Settings,
             testTag = "nav_settings"
@@ -196,7 +198,7 @@ fun MainAppScaffold(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocalGasStation,
-                        contentDescription = "Thêm lần đổ xăng"
+                        contentDescription = stringResource(R.string.nav_add_fuel)
                     )
                 }
             }

@@ -38,10 +38,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.R
 import com.example.core.ui.FabClearance
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.CyanAccent
@@ -72,14 +74,14 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(28.dp))
             Column(modifier = Modifier.padding(bottom = 8.dp)) {
                 Text(
-                    text = "Cài đặt & Tùy chọn",
+                    text = stringResource(R.string.settings_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Tuỳ chỉnh danh mục, mẫu bảo dưỡng và dữ liệu",
+                    text = stringResource(R.string.settings_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -119,13 +121,13 @@ fun SettingsScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Quản lý loại nhiên liệu",
+                            text = stringResource(R.string.settings_fuel_types_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Tạo, sửa hoặc lưu trữ các loại xăng/dầu",
+                            text = stringResource(R.string.settings_fuel_types_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -173,13 +175,13 @@ fun SettingsScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Mẫu hạng mục bảo dưỡng",
+                            text = stringResource(R.string.settings_maintenance_templates_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Quản lý các mẫu nhắc lịch bảo dưỡng định kỳ",
+                            text = stringResource(R.string.settings_maintenance_templates_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -197,7 +199,7 @@ fun SettingsScreen(
         // Section: System Units (VND, km, L/100km)
         item {
             Text(
-                text = "Đơn vị tiêu chuẩn",
+                text = stringResource(R.string.settings_units_section),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -211,10 +213,22 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(containerColor = DarkSurface)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    UnitRow(title = "Đơn vị tiền tệ", value = "VND (đ)")
-                    UnitRow(title = "Đơn vị khoảng cách", value = "Kilomet (km) / mét")
-                    UnitRow(title = "Đơn vị nhiên liệu", value = "Lít (L)")
-                    UnitRow(title = "Mức tiêu hao", value = "L / 100km & km / L")
+                    UnitRow(
+                        title = stringResource(R.string.settings_unit_currency_title),
+                        value = stringResource(R.string.settings_unit_currency_value)
+                    )
+                    UnitRow(
+                        title = stringResource(R.string.settings_unit_distance_title),
+                        value = stringResource(R.string.settings_unit_distance_value)
+                    )
+                    UnitRow(
+                        title = stringResource(R.string.settings_unit_fuel_title),
+                        value = stringResource(R.string.settings_unit_fuel_value)
+                    )
+                    UnitRow(
+                        title = stringResource(R.string.settings_unit_consumption_title),
+                        value = stringResource(R.string.settings_unit_consumption_value)
+                    )
                 }
             }
         }
@@ -222,7 +236,7 @@ fun SettingsScreen(
         // Section: Demo Data (for convenient testing & evaluator verification)
         item {
             Text(
-                text = "Dữ liệu mẫu (Demo)",
+                text = stringResource(R.string.settings_sample_data_section),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -237,14 +251,14 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Khởi tạo dữ liệu thử nghiệm",
+                        text = stringResource(R.string.settings_sample_data_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Tự động thêm xe mẫu (Honda Vision, Toyota Vios) và các bản ghi đổ xăng để kiểm tra ngay tính năng tính tiêu hao, ODO và thống kê.",
+                        text = stringResource(R.string.settings_sample_data_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -260,9 +274,9 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = when (sampleDataStatus) {
-                                SampleDataStatus.LOADED -> "Đã nạp dữ liệu mẫu"
-                                SampleDataStatus.ALREADY_HAS_DATA -> "Đã có dữ liệu, không ghi đè"
-                                SampleDataStatus.IDLE -> "Nạp dữ liệu mẫu ngay"
+                                SampleDataStatus.LOADED -> stringResource(R.string.settings_sample_loaded)
+                                SampleDataStatus.ALREADY_HAS_DATA -> stringResource(R.string.settings_sample_already_has_data)
+                                SampleDataStatus.IDLE -> stringResource(R.string.settings_sample_load)
                             },
                             color = when (sampleDataStatus) {
                                 SampleDataStatus.LOADED -> SuccessGreen
@@ -291,7 +305,7 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Ứng dụng theo dõi chi phí và tiêu hao nhiên liệu cá nhân, 100% offline-first, bảo mật và lưu trữ độc lập trên thiết bị.",
+                        text = stringResource(R.string.settings_about_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
