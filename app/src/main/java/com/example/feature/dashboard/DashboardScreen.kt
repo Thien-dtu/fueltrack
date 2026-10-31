@@ -338,7 +338,11 @@ fun DashboardScreen(
                 }
             }
         } else {
-            items(uiState.recentEntries) { entryWithDetails ->
+            items(
+                items = uiState.recentEntries,
+                key = { it.entry.id },
+                contentType = { "fuel_entry" }
+            ) { entryWithDetails ->
                 FuelEntryCard(
                     entryWithDetails = entryWithDetails,
                     onClick = { onNavigateToEditFuel(entryWithDetails.entry.id) }

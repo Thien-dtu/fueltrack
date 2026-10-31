@@ -153,7 +153,11 @@ fun FuelTypeManagementScreen(
             }
 
             // Active Fuel Types
-            items(uiState.activeTypes) { ft ->
+            items(
+                items = uiState.activeTypes,
+                key = { it.id },
+                contentType = { "fuel_type" }
+            ) { ft ->
                 FuelTypeItemCard(
                     fuelType = ft,
                     onEdit = { editingFuelType = ft },
@@ -173,7 +177,11 @@ fun FuelTypeManagementScreen(
                     )
                 }
 
-                items(uiState.archivedTypes) { ft ->
+                items(
+                    items = uiState.archivedTypes,
+                    key = { it.id },
+                    contentType = { "fuel_type" }
+                ) { ft ->
                     FuelTypeItemCard(
                         fuelType = ft,
                         onEdit = { editingFuelType = ft },

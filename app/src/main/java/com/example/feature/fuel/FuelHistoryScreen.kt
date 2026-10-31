@@ -125,7 +125,11 @@ fun FuelHistoryScreen(
                 )
             }
 
-            items(uiState.entries) { entryWithDetails ->
+            items(
+                items = uiState.entries,
+                key = { it.entry.id },
+                contentType = { "fuel_entry" }
+            ) { entryWithDetails ->
                 Box(modifier = Modifier.fillMaxWidth()) {
                     FuelEntryCard(
                         entryWithDetails = entryWithDetails,

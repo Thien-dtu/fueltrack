@@ -137,7 +137,11 @@ fun VehicleListScreen(
         }
 
         // Active Vehicles
-        items(uiState.activeVehicles) { vehicle ->
+        items(
+            items = uiState.activeVehicles,
+            key = { it.id },
+            contentType = { "vehicle" }
+        ) { vehicle ->
             VehicleCardItem(
                 vehicle = vehicle,
                 onEdit = { onNavigateToEditVehicle(vehicle.id) },
@@ -158,7 +162,11 @@ fun VehicleListScreen(
                 )
             }
 
-            items(uiState.archivedVehicles) { vehicle ->
+            items(
+                items = uiState.archivedVehicles,
+                key = { it.id },
+                contentType = { "vehicle" }
+            ) { vehicle ->
                 VehicleCardItem(
                     vehicle = vehicle,
                     onEdit = { onNavigateToEditVehicle(vehicle.id) },

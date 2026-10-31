@@ -197,7 +197,11 @@ fun StatisticsScreen(
                 }
             }
         } else {
-            items(uiState.monthlyStats) { month ->
+            items(
+                items = uiState.monthlyStats,
+                key = { it.yearMonthKey },
+                contentType = { "month" }
+            ) { month ->
                 MonthlyStatCard(stats = month)
             }
         }

@@ -124,7 +124,11 @@ fun MaintenanceHistoryScreen(
                 )
             }
 
-            items(uiState.entries) { entry ->
+            items(
+                items = uiState.entries,
+                key = { it.id },
+                contentType = { "maintenance_entry" }
+            ) { entry ->
                 MaintenanceEntryCard(
                     entry = entry,
                     onClick = { onNavigateToEditEntry(entry.id) },

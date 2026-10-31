@@ -143,7 +143,11 @@ fun TemplateManagementScreen(
                     )
                 }
 
-                items(uiState.userTemplates) { tmpl ->
+                items(
+                    items = uiState.userTemplates,
+                    key = { it.id },
+                    contentType = { "template" }
+                ) { tmpl ->
                     TemplateItemCard(
                         template = tmpl,
                         onEdit = { editingTemplate = tmpl },
@@ -162,7 +166,11 @@ fun TemplateManagementScreen(
                 )
             }
 
-            items(uiState.builtInTemplates) { tmpl ->
+            items(
+                items = uiState.builtInTemplates,
+                key = { it.id },
+                contentType = { "template" }
+            ) { tmpl ->
                 TemplateItemCard(
                     template = tmpl,
                     onEdit = null, // Built-in templates are read-only
@@ -190,7 +198,11 @@ fun TemplateManagementScreen(
                 }
 
                 if (uiState.showArchived) {
-                    items(uiState.archivedTemplates) { tmpl ->
+                    items(
+                        items = uiState.archivedTemplates,
+                        key = { it.id },
+                        contentType = { "template" }
+                    ) { tmpl ->
                         TemplateItemCard(
                             template = tmpl,
                             onEdit = null,

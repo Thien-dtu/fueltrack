@@ -67,8 +67,14 @@ object OdometerParser {
      * Formats Long meters into user-friendly km string.
      * E.g. 1,222,400 meters -> "1.222,4" or "1,222.4" depending on comma flag
      */
-    fun formatKm(meters: Long, useCommaDecimal: Boolean = true): String {
-        val km = meters / 1000.0
+    // Cached per (decimal style, has-fraction) combination. DecimalFormat is not
+    // thread-safe, hence ThreadLocal; the four variants cover every call site.
+    private val kmFormatCommaWhole = ThreadLocal.withInitial { kmFormatter(true, false) }
+    private val kmFormatCommaFraction = ThreadLocal.withInitial { kmFormatter(true, true) }
+    private val kmFormatDotWhole = ThreadLocal.withInitial { kmFormatter(false, false) }
+    private val kmFormatDotFraction = ThreadLocal.withInitial { kmFormatter(false, true) }
+
+    private fun kmFormatter(useCommaDecimal: Boolean, withFraction: Boolean): DecimalFormat {
         val symbols = DecimalFormatSymbols(Locale.US).apply {
             if (useCommaDecimal) {
                 groupingSeparator = '.'
@@ -78,10 +84,19 @@ object OdometerParser {
                 decimalSeparator = '.'
             }
         }
-        val decimalPart = (meters % 1000) / 100
-        val pattern = if (decimalPart == 0L && meters % 1000 == 0L) "#,##0" else "#,##0.0"
-        val df = DecimalFormat(pattern, symbols)
-        return df.format(km)
+        val pattern = if (withFraction) "#,##0.0" else "#,##0"
+        return DecimalFormat(pattern, symbols)
+    }
+
+    fun formatKm(meters: Long, useCommaDecimal: Boolean = true): String {
+        val hasFraction = meters % 1000 != 0L
+        val formatter = when {
+            useCommaDecimal && hasFraction -> kmFormatCommaFraction.get()!!
+            useCommaDecimal -> kmFormatCommaWhole.get()!!
+            hasFraction -> kmFormatDotFraction.get()!!
+            else -> kmFormatDotWhole.get()!!
+        }
+        return formatter.format(meters / 1000.0)
     }
 
     /**
@@ -162,20 +177,39 @@ object FuelCalculator {
 
 object Formatters {
 
-    fun formatCurrencyVnd(amount: Long): String {
-        val symbols = DecimalFormatSymbols(Locale.US).apply {
+    // SimpleDateFormat/DecimalFormat are NOT thread-safe. Each coroutine/IO thread gets
+    // its own instance via ThreadLocal, so we pay the construction cost once per thread
+    // instead of once per call (these run inside composition, so that matters).
+    private val currencyFormat = ThreadLocal.withInitial {
+        DecimalFormat("#,###", DecimalFormatSymbols(Locale.US).apply {
             groupingSeparator = '.'
-        }
-        val df = DecimalFormat("#,###", symbols)
-        return "${df.format(amount)} đ"
+        })
+    }
+
+    private val litersFormat = ThreadLocal.withInitial {
+        DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.US).apply {
+            decimalSeparator = ','
+        })
+    }
+
+    private val dateTimeFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    }
+
+    private val dateOnlyFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    }
+
+    private val monthYearFormat = ThreadLocal.withInitial {
+        SimpleDateFormat("MMMM yyyy", Locale.forLanguageTag("vi-VN"))
+    }
+
+    fun formatCurrencyVnd(amount: Long): String {
+        return "${currencyFormat.get()!!.format(amount)} đ"
     }
 
     fun formatLiters(liters: Double): String {
-        val symbols = DecimalFormatSymbols(Locale.US).apply {
-            decimalSeparator = ','
-        }
-        val df = DecimalFormat("#,##0.00", symbols)
-        return "${df.format(liters)} L"
+        return "${litersFormat.get()!!.format(liters)} L"
     }
 
     fun formatDistanceKm(meters: Long): String {
@@ -184,25 +218,19 @@ object Formatters {
 
     fun formatConsumption(lPer100Km: Double?): String {
         if (lPer100Km == null) return "Chưa đủ dữ liệu"
-        val symbols = DecimalFormatSymbols(Locale.US).apply {
-            decimalSeparator = ','
-        }
-        val df = DecimalFormat("#,##0.00", symbols)
-        return "${df.format(lPer100Km)} L/100km"
+        return "${litersFormat.get()!!.format(lPer100Km)} L/100km"
     }
 
     fun formatDateTime(epochMillis: Long): String {
-        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        return sdf.format(Date(epochMillis))
+        return dateTimeFormat.get()!!.format(Date(epochMillis))
     }
 
     fun formatDateOnly(epochMillis: Long): String {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return sdf.format(Date(epochMillis))
+        return dateOnlyFormat.get()!!.format(Date(epochMillis))
     }
 
     fun formatMonthYear(epochMillis: Long): String {
-        val sdf = SimpleDateFormat("MMMM yyyy", Locale.forLanguageTag("vi-VN"))
-        return sdf.format(Date(epochMillis)).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        val formatted = monthYearFormat.get()!!.format(Date(epochMillis))
+        return formatted.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
     }
 }

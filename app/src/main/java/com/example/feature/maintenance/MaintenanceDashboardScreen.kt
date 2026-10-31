@@ -221,7 +221,11 @@ fun MaintenanceDashboardScreen(
                 }
             }
 
-            items(uiState.dueSchedules) { scheduleWithStatus ->
+            items(
+                items = uiState.dueSchedules,
+                key = { it.schedule.id },
+                contentType = { "schedule" }
+            ) { scheduleWithStatus ->
                 MaintenanceScheduleCard(
                     scheduleWithStatus = scheduleWithStatus,
                     onComplete = { onNavigateToCompleteSchedule(scheduleWithStatus.schedule.id) },
@@ -256,7 +260,11 @@ fun MaintenanceDashboardScreen(
                 }
             }
         } else {
-            items(uiState.upcomingSchedules) { scheduleWithStatus ->
+            items(
+                items = uiState.upcomingSchedules,
+                key = { it.schedule.id },
+                contentType = { "schedule" }
+            ) { scheduleWithStatus ->
                 MaintenanceScheduleCard(
                     scheduleWithStatus = scheduleWithStatus,
                     onComplete = { onNavigateToCompleteSchedule(scheduleWithStatus.schedule.id) },
@@ -309,7 +317,11 @@ fun MaintenanceDashboardScreen(
                 }
             }
         } else {
-            items(uiState.recentEntries) { entry ->
+            items(
+                items = uiState.recentEntries,
+                key = { it.id },
+                contentType = { "maintenance_entry" }
+            ) { entry ->
                 MaintenanceEntryCard(
                     entry = entry,
                     onClick = { onNavigateToEditEntry(entry.id) }
