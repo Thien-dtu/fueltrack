@@ -24,18 +24,19 @@ class SettingsViewModel @Inject constructor(
     private val fuelRepository: FuelRepository
 ) : ViewModel() {
 
-    private val _demoDataLoaded = MutableStateFlow(false)
-    val demoDataLoaded: StateFlow<Boolean> = _demoDataLoaded.asStateFlow()
+    private val _sampleDataStatus = MutableStateFlow(SampleDataStatus.IDLE)
+    val sampleDataStatus: StateFlow<SampleDataStatus> = _sampleDataStatus.asStateFlow()
 
     fun loadSampleData() {
         viewModelScope.launch {
             val now = System.currentTimeMillis()
             val oneDay = 86_400_000L
 
-            // Check if demo vehicle already exists
+            // Sample data must not overwrite a garage the user already filled.
+            // Report that distinctly instead of pretending the samples were loaded.
             val existingVehicles = vehicleRepository.getActiveCount()
             if (existingVehicles > 0) {
-                _demoDataLoaded.value = true
+                _sampleDataStatus.value = SampleDataStatus.ALREADY_HAS_DATA
                 return@launch
             }
 
@@ -165,7 +166,20 @@ class SettingsViewModel @Inject constructor(
                 )
             )
 
-            _demoDataLoaded.value = true
+            _sampleDataStatus.value = SampleDataStatus.LOADED
         }
     }
+}
+
+/**
+ * Outcome of the "load sample data" action.
+ *
+ * [ALREADY_HAS_DATA] is distinct from [LOADED] on purpose: the samples are only
+ * inserted into an empty garage, so telling the user "đã nạp dữ liệu mẫu" when
+ * nothing was written would be misleading.
+ */
+enum class SampleDataStatus {
+    IDLE,
+    LOADED,
+    ALREADY_HAS_DATA
 }

@@ -54,6 +54,12 @@ object StatisticsCalculator {
             }
             .groupBy({ it.second }, { it.first })
 
+        val costPeriodsByMonth = FuelCostCalculator.calculatePeriods(entries)
+            .mapNotNull { period ->
+                entryById[period.endEntryId]?.let { period to monthKeyFormatter.format(Date(it.timestamp)) }
+            }
+            .groupBy({ it.second }, { it.first })
+
         val entriesByMonth = chronological.groupBy { monthKeyOf(it) }
 
         val resultList = mutableListOf<MonthlyFuelStats>()
@@ -73,8 +79,14 @@ object StatisticsCalculator {
                 null
             }
 
-            val avgCostPerKm: Double? = if (totalDistanceMeters > 0L && totalCostVnd > 0L) {
-                FuelCalculator.calculateCostPerKm(totalCostVnd, totalDistanceMeters)
+            // Cost per km uses the same full-tank cycle as consumption: fuel bought in
+            // one month mostly pays for the next month's driving, so dividing a month's
+            // spend by that same month's distance shifts the cost by a whole cycle.
+            val monthCostPeriods = costPeriodsByMonth[monthKey].orEmpty()
+            val cycleCostVnd = monthCostPeriods.sumOf { it.costVnd }
+            val cycleDistanceMeters = monthCostPeriods.sumOf { it.distanceMeters }
+            val avgCostPerKm: Double? = if (cycleDistanceMeters > 0L && cycleCostVnd > 0L) {
+                FuelCalculator.calculateCostPerKm(cycleCostVnd, cycleDistanceMeters)
             } else {
                 null
             }

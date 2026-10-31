@@ -177,8 +177,15 @@ fun DashboardScreen(
 
         // Key Monthly Summary Metrics (2x2 Grid)
         item {
+            val statsMonthLabel = uiState.currentMonthStats?.displayName
             Text(
-                text = "Tháng này (${uiState.currentMonthStats?.displayName ?: "Hiện tại"})",
+                text = when {
+                    statsMonthLabel == null -> "Chưa có dữ liệu tháng"
+                    // The stats may describe an earlier month when the current one has no
+                    // entries yet; label it honestly instead of calling it "this month".
+                    uiState.statsAreForCurrentMonth -> "Tháng này ($statsMonthLabel)"
+                    else -> "Gần nhất ($statsMonthLabel)"
+                },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface

@@ -4,6 +4,7 @@ import com.example.core.database.AppDatabase
 import com.example.core.database.dao.MaintenanceEntryDao
 import com.example.core.database.dao.MaintenanceScheduleDao
 import com.example.core.database.dao.MaintenanceTemplateDao
+import com.example.core.database.dao.VehicleDao
 import com.example.core.database.entity.MaintenanceEntryEntity
 import com.example.core.database.entity.MaintenanceScheduleEntity
 import com.example.core.database.entity.MaintenanceTemplateEntity
@@ -66,6 +67,7 @@ class MaintenanceRepositoryImpl @javax.inject.Inject constructor(
     private val templateDao: MaintenanceTemplateDao,
     private val entryDao: MaintenanceEntryDao,
     private val scheduleDao: MaintenanceScheduleDao,
+    private val vehicleDao: VehicleDao,
     private val workScheduler: com.example.core.work.MaintenanceWorkScheduler? = null
 ) : MaintenanceRepository {
 
@@ -228,6 +230,18 @@ class MaintenanceRepositoryImpl @javax.inject.Inject constructor(
                     )
                     scheduleDao.updateSchedule(completedSchedule)
                     updatedSchedule = completedSchedule.toDomain()
+                }
+            }
+
+            // 3. Raise the vehicle odometer as part of the same transaction. Doing it
+            // outside would leave the app in a state where the maintenance entry exists
+            // but the vehicle still reports its old reading if the process dies between
+            // the two writes.
+            val entryOdo = entry.odometerMeters
+            if (entryOdo != null) {
+                val vehicle = vehicleDao.getVehicleById(entry.vehicleId)
+                if (vehicle != null && entryOdo > vehicle.currentOdometerMeters) {
+                    vehicleDao.updateCurrentOdometer(entry.vehicleId, entryOdo)
                 }
             }
 

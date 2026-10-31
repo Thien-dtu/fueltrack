@@ -54,7 +54,7 @@ fun SettingsScreen(
     onNavigateToMaintenanceTemplates: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val demoDataLoaded by viewModel.demoDataLoaded.collectAsStateWithLifecycle()
+    val sampleDataStatus by viewModel.sampleDataStatus.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = modifier
@@ -253,8 +253,16 @@ fun SettingsScreen(
                         Icon(Icons.Default.DataObject, contentDescription = null, tint = AmberPrimary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (demoDataLoaded) "Đã nạp dữ liệu mẫu" else "Nạp dữ liệu mẫu ngay",
-                            color = if (demoDataLoaded) SuccessGreen else MaterialTheme.colorScheme.onSurface
+                            text = when (sampleDataStatus) {
+                                SampleDataStatus.LOADED -> "Đã nạp dữ liệu mẫu"
+                                SampleDataStatus.ALREADY_HAS_DATA -> "Đã có dữ liệu, không ghi đè"
+                                SampleDataStatus.IDLE -> "Nạp dữ liệu mẫu ngay"
+                            },
+                            color = when (sampleDataStatus) {
+                                SampleDataStatus.LOADED -> SuccessGreen
+                                SampleDataStatus.ALREADY_HAS_DATA -> AmberPrimary
+                                SampleDataStatus.IDLE -> MaterialTheme.colorScheme.onSurface
+                            }
                         )
                     }
                 }

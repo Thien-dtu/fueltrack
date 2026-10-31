@@ -240,6 +240,10 @@ class AddEditMaintenanceEntryViewModel @Inject constructor(
 
         viewModelScope.launch {
             val now = System.currentTimeMillis()
+            // Keep the original creation timestamp when editing; only an insert may set it.
+            val existingCreatedAt = if (editEntryId != null && editEntryId > 0) {
+                maintenanceRepository.getEntryById(editEntryId)?.createdAt
+            } else null
             val entry = MaintenanceEntry(
                 id = editEntryId ?: 0L,
                 vehicleId = state.selectedVehicleId,
@@ -252,28 +256,35 @@ class AddEditMaintenanceEntryViewModel @Inject constructor(
                 cost = costVnd,
                 providerName = state.providerName.trim(),
                 note = state.note.trim(),
-                createdAt = now,
+                createdAt = existingCreatedAt ?: now,
                 updatedAt = now
             )
 
             if (prefilledScheduleId != null && prefilledScheduleId > 0) {
-                // Atomic transaction: Complete schedule and record entry
+                // Completing a schedule records the entry, advances the schedule and
+                // raises the vehicle odometer in one transaction.
                 maintenanceRepository.completeScheduleWithEntry(prefilledScheduleId, entry)
             } else if (editEntryId != null && editEntryId > 0) {
                 maintenanceRepository.updateEntry(entry)
+                syncVehicleOdometer(odoMeters, state.selectedVehicleId)
             } else {
                 maintenanceRepository.insertEntry(entry)
-            }
-
-            // Update vehicle current odometer if higher
-            if (odoMeters != null) {
-                val vehicle = vehicleRepository.getVehicle(state.selectedVehicleId)
-                if (vehicle != null && odoMeters > vehicle.currentOdometerMeters) {
-                    vehicleRepository.updateCurrentOdometer(state.selectedVehicleId, odoMeters)
-                }
+                syncVehicleOdometer(odoMeters, state.selectedVehicleId)
             }
 
             _formState.update { it.copy(isSubmitting = false, isSaved = true) }
+        }
+    }
+
+    /**
+     * Keeps the vehicle odometer in step with a manually recorded maintenance entry.
+     * Only ever raises it: a lower reading may be an old service being back-filled.
+     */
+    private suspend fun syncVehicleOdometer(odoMeters: Long?, vehicleId: Long) {
+        if (odoMeters == null) return
+        val vehicle = vehicleRepository.getVehicle(vehicleId) ?: return
+        if (odoMeters > vehicle.currentOdometerMeters) {
+            vehicleRepository.updateCurrentOdometer(vehicleId, odoMeters)
         }
     }
 

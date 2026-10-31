@@ -31,6 +31,12 @@ data class DashboardUiState(
     val selectedVehicle: Vehicle? = null,
     val recentEntries: List<FuelEntryWithDetails> = emptyList(),
     val currentMonthStats: MonthlyFuelStats? = null,
+    /**
+     * True when [currentMonthStats] actually describes the running calendar month.
+     * On the first days of a month the app falls back to the most recent month that
+     * has data, and the UI must label that month instead of calling it "this month".
+     */
+    val statsAreForCurrentMonth: Boolean = false,
     val isLoading: Boolean = true
 )
 
@@ -105,12 +111,17 @@ class DashboardViewModel @Inject constructor(
             now.get(Calendar.MONTH) + 1
         )
         val currentMonthStats = monthlyStats.firstOrNull { it.yearMonthKey == currentMonthKey }
+        // Early in a new month there are no entries yet, so the running month has no
+        // stats. Showing empty placeholders hides the last known consumption figures;
+        // fall back to the most recent month that does have data and let the UI label it.
+        val fallbackStats = currentMonthStats ?: monthlyStats.firstOrNull()
 
         DashboardUiState(
             vehicles = activeVehicles,
             selectedVehicle = currentVehicle,
             recentEntries = recentWithDetails,
-            currentMonthStats = currentMonthStats,
+            currentMonthStats = fallbackStats,
+            statsAreForCurrentMonth = currentMonthStats != null,
             isLoading = false
         )
     }.stateIn(
