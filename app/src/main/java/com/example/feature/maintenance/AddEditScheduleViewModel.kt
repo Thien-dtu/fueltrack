@@ -7,6 +7,7 @@ import com.example.core.model.MaintenanceSchedule
 import com.example.core.model.MaintenanceTemplate
 import com.example.core.model.ScheduleLifecycleStatus
 import com.example.core.model.Vehicle
+import com.example.core.model.VehicleType
 import com.example.core.repository.MaintenanceRepository
 import com.example.core.repository.VehicleRepository
 import com.example.core.util.OdometerParser
@@ -99,9 +100,16 @@ class AddEditScheduleViewModel @Inject constructor(
 
                 val currentVehicle = vList.find { it.id == selectedVId }
                 val defaultTargetOdo = if (current.dueOdoInput.isBlank() && currentVehicle != null) {
-                    // Default to current + 2,000 km
-                    val nextMeters = currentVehicle.currentOdometerMeters + 2_000_000L
-                    OdometerParser.formatForEdit(nextMeters, useComma = true)
+                    // A motorcycle is serviced every ~2,000 km, a car every ~5,000 km.
+                    // Using one figure for both made car defaults fire far too early.
+                    val intervalMeters = when (currentVehicle.type) {
+                        VehicleType.CAR -> 5_000_000L
+                        VehicleType.MOTORCYCLE -> 2_000_000L
+                    }
+                    OdometerParser.formatForEdit(
+                        currentVehicle.currentOdometerMeters + intervalMeters,
+                        useComma = true
+                    )
                 } else {
                     current.dueOdoInput
                 }

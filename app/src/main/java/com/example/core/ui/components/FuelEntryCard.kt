@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,23 @@ fun FuelEntryCard(
     onDelete: (() -> Unit)? = null
 ) {
     val entry = entryWithDetails.entry
+
+    // Formatting allocates; keep the results across recompositions that do not
+    // change the underlying numbers (scrolling, selection, theme changes).
+    val formattedDateTime = remember(entry.timestamp) { Formatters.formatDateTime(entry.timestamp) }
+    val formattedAmount = remember(entry.amountPaid) { Formatters.formatCurrencyVnd(entry.amountPaid) }
+    val formattedOdometer = remember(entry.odometerMeters) { Formatters.formatDistanceKm(entry.odometerMeters) }
+    val formattedLiters = remember(entry.liters) { Formatters.formatLiters(entry.liters) }
+    val formattedPrice = remember(entry.pricePerLiter) { Formatters.formatCurrencyVnd(entry.pricePerLiter) }
+    val formattedDistance = remember(entryWithDetails.distanceSincePreviousMeters) {
+        entryWithDetails.distanceSincePreviousMeters?.let { Formatters.formatDistanceKm(it) }
+    }
+    val formattedConsumption = remember(entryWithDetails.consumptionLPer100Km) {
+        entryWithDetails.consumptionLPer100Km?.let { Formatters.formatConsumption(it) }
+    }
+    val formattedCostPerKm = remember(entryWithDetails.costPerKmVnd) {
+        entryWithDetails.costPerKmVnd?.let { Formatters.formatCurrencyVnd(it.toLong()) }
+    }
 
     Card(
         onClick = onClick,
@@ -81,7 +99,7 @@ fun FuelEntryCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = Formatters.formatDateTime(entry.timestamp),
+                        text = formattedDateTime,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -95,7 +113,7 @@ fun FuelEntryCard(
 
                 // Amount paid
                 Text(
-                    text = Formatters.formatCurrencyVnd(entry.amountPaid),
+                    text = formattedAmount,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -144,7 +162,7 @@ fun FuelEntryCard(
                         )
                     }
                     Text(
-                        text = Formatters.formatDistanceKm(entry.odometerMeters),
+                        text = formattedOdometer,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -159,7 +177,7 @@ fun FuelEntryCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = Formatters.formatLiters(entry.liters),
+                        text = formattedLiters,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -174,7 +192,7 @@ fun FuelEntryCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "${Formatters.formatCurrencyVnd(entry.pricePerLiter)}/L",
+                        text = "$formattedPrice/L",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -193,7 +211,7 @@ fun FuelEntryCard(
                 ) {
                     if (entryWithDetails.distanceSincePreviousMeters != null) {
                         Text(
-                            text = "+${Formatters.formatDistanceKm(entryWithDetails.distanceSincePreviousMeters)}",
+                            text = "+$formattedDistance",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = CyanAccent
@@ -204,7 +222,7 @@ fun FuelEntryCard(
 
                     if (entryWithDetails.consumptionLPer100Km != null) {
                         Text(
-                            text = "${Formatters.formatConsumption(entryWithDetails.consumptionLPer100Km)}",
+                            text = formattedConsumption ?: "",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = SuccessGreen
@@ -216,7 +234,7 @@ fun FuelEntryCard(
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         Text(
-                            text = "${Formatters.formatCurrencyVnd(entryWithDetails.costPerKmVnd.toLong())}/km",
+                            text = "$formattedCostPerKm/km",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.tertiary

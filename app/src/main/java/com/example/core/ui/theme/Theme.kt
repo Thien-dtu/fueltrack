@@ -31,7 +31,9 @@ fun FuelTrackTheme(
 ) {
     MaterialTheme(
         colorScheme = FuelTrackColorScheme,
-        typography = MaterialTheme.typography,
+        // No typography override: passing MaterialTheme.typography here just read the
+        // ambient value and handed it back, which is a no-op that also makes the theme
+        // read its own ambient state.
         content = content
     )
 }

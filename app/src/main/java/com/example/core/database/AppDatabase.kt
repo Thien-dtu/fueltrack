@@ -19,6 +19,7 @@ import com.example.core.database.entity.MaintenanceTemplateEntity
 import com.example.core.database.entity.VehicleEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -47,9 +48,21 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        /**
+         * Scope for seeding work triggered by Room callbacks.
+         *
+         * Room invokes onCreate/onOpen synchronously while the database is being
+         * opened. The old code started a fresh CoroutineScope per callback and called
+         * getInstance(context) from inside it, which could re-enter the builder before
+         * INSTANCE was assigned. A single supervised scope plus the captured instance
+         * removes both problems.
+         */
+        private val seedScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                lateinit var built: AppDatabase
+                built = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "fueltrack.db"
@@ -59,22 +72,18 @@ abstract class AppDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             // Initial seed on first install
-                            CoroutineScope(Dispatchers.IO).launch {
-                                seedInitialData(getInstance(context))
-                            }
+                            seedScope.launch { seedInitialData(built) }
                         }
 
                         override fun onOpen(db: SupportSQLiteDatabase) {
                             super.onOpen(db)
                             // Idempotent seed check for maintenance templates if upgrading or newly added
-                            CoroutineScope(Dispatchers.IO).launch {
-                                seedMaintenanceTemplatesIfEmpty(getInstance(context))
-                            }
+                            seedScope.launch { seedMaintenanceTemplatesIfEmpty(built) }
                         }
                     })
                     .build()
-                INSTANCE = instance
-                instance
+                INSTANCE = built
+                built
             }
         }
 

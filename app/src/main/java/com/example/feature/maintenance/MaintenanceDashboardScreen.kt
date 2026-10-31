@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,6 +53,7 @@ import com.example.core.ui.components.EmptyVehicleState
 import com.example.core.ui.components.MaintenanceEntryCard
 import com.example.core.ui.components.MaintenanceScheduleCard
 import com.example.core.ui.components.VehicleSwitcher
+import com.example.core.ui.FabClearance
 import com.example.core.ui.theme.AmberPrimary
 import com.example.core.ui.theme.CyanAccent
 import com.example.core.ui.theme.DarkSurface
@@ -109,7 +111,11 @@ fun MaintenanceDashboardScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        // System insets are already applied by the Scaffold around the NavHost; this
+        // padding only keeps the last card clear of the floating action button, which
+        // does not contribute to the scaffold's inner padding.
+        contentPadding = PaddingValues(bottom = FabClearance)
     ) {
         item {
             Spacer(modifier = Modifier.height(28.dp))
@@ -329,8 +335,5 @@ fun MaintenanceDashboardScreen(
             }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
-        }
     }
 }

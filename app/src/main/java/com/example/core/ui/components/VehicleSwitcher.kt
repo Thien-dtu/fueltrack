@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -90,30 +91,34 @@ fun VehicleSwitcher(
             onDismissRequest = { expanded = false },
             modifier = Modifier.background(MaterialTheme.colorScheme.surface)
         ) {
+            // key() keeps each menu item's composition tied to its vehicle id, so
+            // selecting one does not rebuild the whole menu.
             vehicles.forEach { vehicle ->
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (vehicle.type == VehicleType.CAR) Icons.Default.DirectionsCar else Icons.Default.TwoWheeler,
-                                contentDescription = null,
-                                tint = if (vehicle.id == selectedVehicle?.id) AmberPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = vehicle.name,
-                                fontWeight = if (vehicle.id == selectedVehicle?.id) FontWeight.Bold else FontWeight.Normal,
-                                color = if (vehicle.id == selectedVehicle?.id) AmberPrimary else MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    },
-                    onClick = {
-                        onVehicleSelected(vehicle.id)
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag("vehicle_item_${vehicle.id}")
-                )
+                key(vehicle.id) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (vehicle.type == VehicleType.CAR) Icons.Default.DirectionsCar else Icons.Default.TwoWheeler,
+                                    contentDescription = null,
+                                    tint = if (vehicle.id == selectedVehicle?.id) AmberPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = vehicle.name,
+                                    fontWeight = if (vehicle.id == selectedVehicle?.id) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (vehicle.id == selectedVehicle?.id) AmberPrimary else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        },
+                        onClick = {
+                            onVehicleSelected(vehicle.id)
+                            expanded = false
+                        },
+                        modifier = Modifier.testTag("vehicle_item_${vehicle.id}")
+                    )
+                }
             }
         }
     }
