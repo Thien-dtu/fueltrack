@@ -127,4 +127,7 @@ dependencies {
   "ksp"(libs.hilt.compiler)
   "ksp"(libs.androidx.hilt.compiler)
   "ksp"(libs.androidx.room.compiler)
+  // ui-tooling-preview only carries the @Preview annotation; the actual rendering
+  // implementation must not ship in release builds.
+  debugImplementation(libs.androidx.compose.ui.tooling)
 }

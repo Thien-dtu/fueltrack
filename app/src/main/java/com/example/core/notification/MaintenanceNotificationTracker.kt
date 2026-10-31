@@ -1,6 +1,7 @@
 package com.example.core.notification
 
 import android.content.Context
+import androidx.core.content.edit
 import com.example.core.model.MaintenanceDueStatus
 
 /**
@@ -97,10 +98,10 @@ object MaintenanceNotificationTracker {
             val statusKey = "notif_${scheduleId}_${cycleKey}_status"
             val timestampKey = "notif_${scheduleId}_${cycleKey}_time"
 
-            prefs.edit()
-                .putString(statusKey, status.name)
-                .putLong(timestampKey, currentTimeMillis)
-                .apply()
+            prefs.edit {
+                putString(statusKey, status.name)
+                putLong(timestampKey, currentTimeMillis)
+            }
         }
     }
 
@@ -116,30 +117,30 @@ object MaintenanceNotificationTracker {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val statusKey = "notif_${scheduleId}_${cycleKey}_status"
             val timestampKey = "notif_${scheduleId}_${cycleKey}_time"
-            prefs.edit()
-                .remove(statusKey)
-                .remove(timestampKey)
-                .apply()
+            prefs.edit {
+                remove(statusKey)
+                remove(timestampKey)
+            }
         }
     }
 
     fun clearHistory(context: Context, scheduleId: Long) {
         synchronized(lock) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val editor = prefs.edit()
             val prefix = "notif_${scheduleId}_"
-            for (key in prefs.all.keys) {
-                if (key.startsWith(prefix)) {
-                    editor.remove(key)
+            prefs.edit {
+                for (key in prefs.all.keys) {
+                    if (key.startsWith(prefix)) {
+                        remove(key)
+                    }
                 }
             }
-            editor.apply()
         }
     }
 
     fun clearAll(context: Context) {
         synchronized(lock) {
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().clear().apply()
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit { clear() }
         }
     }
 }
