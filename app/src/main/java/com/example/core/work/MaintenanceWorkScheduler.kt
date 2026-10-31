@@ -14,9 +14,9 @@ import com.example.core.model.MaintenancePolicy
 import com.example.core.model.MaintenanceSchedule
 import com.example.core.model.ScheduleLifecycleStatus
 import com.example.core.notification.MaintenanceNotificationHelper
+import com.example.core.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -25,7 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class MaintenanceWorkScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    @param:ApplicationScope private val applicationScope: CoroutineScope
 ) {
 
     private fun getWorkManager(): WorkManager? {
@@ -141,15 +142,27 @@ class MaintenanceWorkScheduler @Inject constructor(
      * Does NOT poll continuously; only evaluates on actual user data changes.
      */
     fun evaluateOdometerReminders(vehicleId: Long, newOdometerMeters: Long) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val vehicleEntity = database.vehicleDao().getVehicleById(vehicleId) ?: return@launch
-            if (vehicleEntity.isArchived) return@launch
+        // Runs on the shared application scope: creating a fresh
+        // CoroutineScope(Dispatchers.IO) per call leaked a job for every odometer
+        // update and swallowed failures inside it.
+        applicationScope.launch {
+            // One query returns the vehicle and its active schedules together, instead
+            // of a getVehicleById() call plus a second schedule query.
+            val rows = database.maintenanceScheduleDao()
+                .getActiveSchedulesWithVehicleFor(vehicleId)
+            if (rows.isEmpty()) return@launch
 
-            val schedules = database.maintenanceScheduleDao().getActiveSchedulesForVehicleSync(vehicleId)
-            val vehicle = vehicleEntity.toDomain().copy(currentOdometerMeters = newOdometerMeters)
+            // Resolved once: the JOIN already proved the vehicle exists and is active.
+            val vehicle = database.vehicleDao()
+                .getVehicleById(vehicleId)
+                ?.toDomain()
+                ?.copy(currentOdometerMeters = newOdometerMeters)
+                ?: return@launch
+
             val now = System.currentTimeMillis()
 
-            for (scheduleEntity in schedules) {
+            for (row in rows) {
+                val scheduleEntity = row.schedule
                 if (scheduleEntity.dueOdometerMeters == null) continue
 
                 val schedule = scheduleEntity.toDomain()
@@ -166,16 +179,14 @@ class MaintenanceWorkScheduler @Inject constructor(
                     MaintenancePolicy.NotificationPhase.DUE -> MaintenanceDueStatus.DUE
                     MaintenancePolicy.NotificationPhase.UPCOMING -> MaintenanceDueStatus.UPCOMING
                     MaintenancePolicy.NotificationPhase.NONE -> null
-                }
+                } ?: continue
 
-                if (targetStatus != null) {
-                    MaintenanceNotificationHelper.sendScheduleNotification(
-                        context,
-                        vehicle,
-                        schedule,
-                        targetStatus
-                    )
-                }
+                MaintenanceNotificationHelper.sendScheduleNotification(
+                    context,
+                    vehicle,
+                    schedule,
+                    targetStatus
+                )
             }
         }
     }

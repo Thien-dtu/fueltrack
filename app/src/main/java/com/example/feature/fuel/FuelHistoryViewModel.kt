@@ -7,9 +7,8 @@ import com.example.core.model.FuelEntryWithDetails
 import com.example.core.repository.FuelRepository
 import com.example.core.repository.FuelTypeRepository
 import com.example.core.repository.VehicleRepository
-import com.example.core.util.FuelConsumptionCalculator
+import com.example.core.util.FuelCycleMetricsCalculator
 import com.example.core.util.FuelDistanceCalculator
-import com.example.core.util.FuelCostCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -54,8 +53,9 @@ class FuelHistoryViewModel @Inject constructor(
         vehicleRepository.observeVehicle(vehicleId)
     ) { entries, fuelTypes, vehicle ->
         val fuelTypeMap = fuelTypes.associateBy { it.id }
-        val consumptionByEntryId = FuelConsumptionCalculator.consumptionByEndingEntryId(entries)
-        val costByEntryId = FuelCostCalculator.costByEndingEntryId(entries)
+        // One pass over the full-tank cycles supplies both numbers; asking the two
+        // calculators separately sorted the entry list twice per emission.
+        val cycleMetrics = FuelCycleMetricsCalculator.calculate(entries)
         val vehicleName = vehicle?.name ?: "Phương tiện"
 
         // Resolve the previous fill-up by timestamp: the list itself is ordered by
@@ -64,9 +64,8 @@ class FuelHistoryViewModel @Inject constructor(
         val detailedEntries = entries.map { entry ->
             val distMeters = distanceByEntryId[entry.id]
 
-            val consumption = consumptionByEntryId[entry.id]
-
-            val costPerKm = costByEntryId[entry.id]
+            val consumption = cycleMetrics.consumptionByEntryId[entry.id]
+            val costPerKm = cycleMetrics.costPerKmByEntryId[entry.id]
 
             FuelEntryWithDetails(
                 entry = entry,

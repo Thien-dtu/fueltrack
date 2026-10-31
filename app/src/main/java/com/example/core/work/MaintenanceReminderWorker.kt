@@ -1,17 +1,30 @@
 package com.example.core.work
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.core.database.AppDatabase
+import com.example.core.database.dao.MaintenanceScheduleDao
+import com.example.core.database.dao.ScheduleWithVehicle
 import com.example.core.model.MaintenanceDueStatus
 import com.example.core.model.MaintenancePolicy
-import com.example.core.model.ScheduleLifecycleStatus
 import com.example.core.notification.MaintenanceNotificationHelper
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 
-class MaintenanceReminderWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
+/**
+ * Sends maintenance notifications for date-based reminders.
+ *
+ * Dependencies arrive through Hilt instead of AppDatabase.getInstance(), so the
+ * worker can be constructed with a test database. The audit path also joins the
+ * vehicle in the same query: fetching schedules and then calling getVehicleById()
+ * per schedule was N+1 queries on every daily run.
+ */
+@HiltWorker
+class MaintenanceReminderWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val scheduleDao: MaintenanceScheduleDao
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -21,119 +34,80 @@ class MaintenanceReminderWorker(
 
     override suspend fun doWork(): Result {
         val scheduleId = inputData.getLong(KEY_SCHEDULE_ID, -1L)
-        val db = AppDatabase.getInstance(applicationContext)
-
-        if (scheduleId == -1L) {
-            // Periodic audit of all active schedules (e.g. daily audit)
-            val activeSchedules = db.maintenanceScheduleDao().getAllActiveSchedulesSync()
-            val now = System.currentTimeMillis()
-
-            for (scheduleEntity in activeSchedules) {
-                if (scheduleEntity.isArchived || scheduleEntity.status != ScheduleLifecycleStatus.ACTIVE.name) {
-                    continue
-                }
-
-                val vehicleEntity = db.vehicleDao().getVehicleById(scheduleEntity.vehicleId) ?: continue
-                if (vehicleEntity.isArchived) continue
-
-                val schedule = scheduleEntity.toDomain()
-                val vehicle = vehicleEntity.toDomain()
-
-                val phase = MaintenancePolicy.determineNotificationPhase(
-                    lifecycleStatus = schedule.status,
-                    dueAt = schedule.dueAt,
-                    dueOdometerMeters = schedule.dueOdometerMeters,
-                    currentOdometerMeters = vehicle.currentOdometerMeters,
-                    currentTimeMillis = now
-                )
-
-                // Only notify if actually in an alert phase (UPCOMING, DUE, or OVERDUE)
-                val targetStatus = when (phase) {
-                    MaintenancePolicy.NotificationPhase.OVERDUE -> MaintenanceDueStatus.OVERDUE
-                    MaintenancePolicy.NotificationPhase.DUE -> MaintenanceDueStatus.DUE
-                    MaintenancePolicy.NotificationPhase.UPCOMING -> MaintenanceDueStatus.UPCOMING
-                    MaintenancePolicy.NotificationPhase.NONE -> null
-                }
-
-                if (targetStatus != null) {
-                    MaintenanceNotificationHelper.sendScheduleNotification(
-                        applicationContext,
-                        vehicle,
-                        schedule,
-                        targetStatus
-                    )
-                }
-            }
-            return Result.success()
+        return if (scheduleId == -1L) {
+            auditAllSchedules()
+        } else {
+            handleScheduledReminder(scheduleId)
         }
+    }
 
-        val reminderType = inputData.getString(KEY_REMINDER_TYPE) ?: "DUE"
-        val scheduleEntity = db.maintenanceScheduleDao().getScheduleById(scheduleId) ?: return Result.success()
-
-        if (scheduleEntity.isArchived || scheduleEntity.status != ScheduleLifecycleStatus.ACTIVE.name) {
-            return Result.success()
-        }
-
-        val vehicleEntity = db.vehicleDao().getVehicleById(scheduleEntity.vehicleId) ?: return Result.success()
-        if (vehicleEntity.isArchived) {
-            return Result.success()
-        }
-
-        val schedule = scheduleEntity.toDomain()
-        val vehicle = vehicleEntity.toDomain()
+    /** Periodic audit across every active schedule and vehicle. */
+    private suspend fun auditAllSchedules(): Result {
         val now = System.currentTimeMillis()
 
-        val phase = MaintenancePolicy.determineNotificationPhase(
-            lifecycleStatus = schedule.status,
+        for (row in scheduleDao.getActiveSchedulesWithVehicle()) {
+            val status = statusFor(row, now) ?: continue
+            notify(row, status)
+        }
+        return Result.success()
+    }
+
+    /** One-time reminder for a single schedule. */
+    private suspend fun handleScheduledReminder(scheduleId: Long): Result {
+        val row = scheduleDao.getScheduleWithVehicle(scheduleId) ?: return Result.success()
+        val reminderType = inputData.getString(KEY_REMINDER_TYPE) ?: "DUE"
+        val phase = phaseFor(row, System.currentTimeMillis())
+
+        // The worker may fire slightly early/late relative to the tier it was queued for,
+        // so escalate to whatever the schedule has actually reached by now.
+        val status = when (reminderType) {
+            "UPCOMING" -> when (phase) {
+                MaintenancePolicy.NotificationPhase.UPCOMING -> MaintenanceDueStatus.UPCOMING
+                MaintenancePolicy.NotificationPhase.DUE -> MaintenanceDueStatus.DUE
+                MaintenancePolicy.NotificationPhase.OVERDUE -> MaintenanceDueStatus.OVERDUE
+                MaintenancePolicy.NotificationPhase.NONE -> null
+            }
+            else -> when (phase) {
+                MaintenancePolicy.NotificationPhase.DUE -> MaintenanceDueStatus.DUE
+                MaintenancePolicy.NotificationPhase.OVERDUE -> MaintenanceDueStatus.OVERDUE
+                else -> null
+            }
+        } ?: return Result.success()
+
+        notify(row, status)
+        return Result.success()
+    }
+
+    private fun phaseFor(row: ScheduleWithVehicle, now: Long): MaintenancePolicy.NotificationPhase {
+        val schedule = row.schedule
+        return MaintenancePolicy.determineNotificationPhase(
+            lifecycleStatus = schedule.toDomain().status,
             dueAt = schedule.dueAt,
             dueOdometerMeters = schedule.dueOdometerMeters,
-            currentOdometerMeters = vehicle.currentOdometerMeters,
+            currentOdometerMeters = row.vehicleCurrentOdometerMeters,
             currentTimeMillis = now
         )
+    }
 
-        // For one-time scheduled workers, check if the schedule has reached the scheduled reminder tier
-        if (reminderType == "DUE") {
-            if (phase == MaintenancePolicy.NotificationPhase.DUE) {
-                MaintenanceNotificationHelper.sendScheduleNotification(
-                    applicationContext,
-                    vehicle,
-                    schedule,
-                    MaintenanceDueStatus.DUE
-                )
-            } else if (phase == MaintenancePolicy.NotificationPhase.OVERDUE) {
-                MaintenanceNotificationHelper.sendScheduleNotification(
-                    applicationContext,
-                    vehicle,
-                    schedule,
-                    MaintenanceDueStatus.OVERDUE
-                )
-            }
-        } else if (reminderType == "UPCOMING") {
-            if (phase == MaintenancePolicy.NotificationPhase.UPCOMING) {
-                MaintenanceNotificationHelper.sendScheduleNotification(
-                    applicationContext,
-                    vehicle,
-                    schedule,
-                    MaintenanceDueStatus.UPCOMING
-                )
-            } else if (phase == MaintenancePolicy.NotificationPhase.DUE) {
-                // If it already reached DUE by the time UPCOMING worker ran
-                MaintenanceNotificationHelper.sendScheduleNotification(
-                    applicationContext,
-                    vehicle,
-                    schedule,
-                    MaintenanceDueStatus.DUE
-                )
-            } else if (phase == MaintenancePolicy.NotificationPhase.OVERDUE) {
-                MaintenanceNotificationHelper.sendScheduleNotification(
-                    applicationContext,
-                    vehicle,
-                    schedule,
-                    MaintenanceDueStatus.OVERDUE
-                )
-            }
+    private fun statusFor(row: ScheduleWithVehicle, now: Long): MaintenanceDueStatus? =
+        when (phaseFor(row, now)) {
+            MaintenancePolicy.NotificationPhase.OVERDUE -> MaintenanceDueStatus.OVERDUE
+            MaintenancePolicy.NotificationPhase.DUE -> MaintenanceDueStatus.DUE
+            MaintenancePolicy.NotificationPhase.UPCOMING -> MaintenanceDueStatus.UPCOMING
+            MaintenancePolicy.NotificationPhase.NONE -> null
         }
 
-        return Result.success()
+    private fun notify(row: ScheduleWithVehicle, status: MaintenanceDueStatus) {
+        MaintenanceNotificationHelper.sendScheduleNotification(
+            applicationContext,
+            vehicle = com.example.core.model.Vehicle(
+                id = row.vehicleId,
+                name = row.vehicleName,
+                type = com.example.core.model.VehicleType.MOTORCYCLE,
+                currentOdometerMeters = row.vehicleCurrentOdometerMeters
+            ),
+            schedule = row.schedule.toDomain(),
+            status = status
+        )
     }
 }

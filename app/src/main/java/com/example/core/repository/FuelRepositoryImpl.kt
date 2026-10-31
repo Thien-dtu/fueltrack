@@ -36,20 +36,56 @@ class FuelRepositoryImpl @Inject constructor(
         return fuelEntryDao.getEntryById(id)?.toDomain()
     }
 
-    override suspend fun getLatestForVehicle(vehicleId: Long): FuelEntry? {
-        return fuelEntryDao.getLatestEntryForVehicle(vehicleId)?.toDomain()
-    }
-
-    override suspend fun getPreviousEntryByOdo(vehicleId: Long, odoMeters: Long): FuelEntry? {
-        return fuelEntryDao.getPreviousEntryByOdo(vehicleId, odoMeters)?.toDomain()
-    }
-
     override suspend fun hasOtherEntryAtOdometer(
         vehicleId: Long,
         odoMeters: Long,
         excludedEntryId: Long
     ): Boolean {
         return fuelEntryDao.hasOtherEntryAtOdometer(vehicleId, odoMeters, excludedEntryId)
+    }
+
+    override suspend fun saveWithOdometerSync(entry: FuelEntry): SaveFuelEntryResult {
+        val isUpdate = entry.id > 0L
+        val previousEntry = if (isUpdate) fuelEntryDao.getEntryById(entry.id)?.toDomain() else null
+        if (isUpdate && previousEntry == null) return SaveFuelEntryResult.EntryNotFound
+
+        // The duplicate check, the write and the odometer sync share one transaction.
+        // Checking first and writing afterwards (the previous approach) left a window
+        // where a second save could slip the same odometer reading into the history.
+        val result = database.withTransaction {
+            val duplicate = fuelEntryDao.hasOtherEntryAtOdometer(
+                vehicleId = entry.vehicleId,
+                odoMeters = entry.odometerMeters,
+                excludedEntryId = if (isUpdate) entry.id else 0L
+            )
+            if (duplicate) return@withTransaction SaveFuelEntryResult.DuplicateOdometer
+
+            if (isUpdate && previousEntry != null) {
+                fuelEntryDao.updateEntry(FuelEntryEntity.fromDomain(entry))
+                syncVehicleOdometerAfterChange(
+                    vehicleId = previousEntry.vehicleId,
+                    affectedOdometerMeters = previousEntry.odometerMeters
+                )
+                if (entry.vehicleId != previousEntry.vehicleId) {
+                    syncVehicleOdometerAfterChange(entry.vehicleId, entry.odometerMeters)
+                } else {
+                    syncVehicleOdometerAfterChange(
+                        vehicleId = entry.vehicleId,
+                        affectedOdometerMeters = maxOf(previousEntry.odometerMeters, entry.odometerMeters)
+                    )
+                }
+                SaveFuelEntryResult.Saved(entry.id)
+            } else {
+                val insertedId = fuelEntryDao.insertEntry(FuelEntryEntity.fromDomain(entry))
+                syncVehicleOdometerAfterChange(entry.vehicleId, entry.odometerMeters)
+                SaveFuelEntryResult.Saved(insertedId)
+            }
+        }
+
+        if (result is SaveFuelEntryResult.Saved) {
+            workScheduler?.evaluateOdometerReminders(entry.vehicleId, entry.odometerMeters)
+        }
+        return result
     }
 
     override suspend fun insertAndSyncOdometer(entry: FuelEntry): Long {
@@ -106,14 +142,6 @@ class FuelRepositoryImpl @Inject constructor(
             vehicleId,
             maxOf(vehicle.initialOdometerMeters, historyMax)
         )
-    }
-
-    override suspend fun getEntriesInRange(vehicleId: Long, startTime: Long, endTime: Long): List<FuelEntry> {
-        return fuelEntryDao.getEntriesInRange(vehicleId, startTime, endTime).map { it.toDomain() }
-    }
-
-    override suspend fun getAllEntriesAscForVehicle(vehicleId: Long): List<FuelEntry> {
-        return fuelEntryDao.getAllEntriesAscForVehicle(vehicleId).map { it.toDomain() }
     }
 
     override suspend fun insert(entry: FuelEntry): Long {

@@ -13,6 +13,8 @@ import com.example.core.model.MaintenanceDueStatus
 import com.example.core.model.MaintenancePolicy
 import com.example.core.model.ScheduleLifecycleStatus
 import com.example.core.notification.MaintenanceNotificationTracker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -151,7 +153,7 @@ class MaintenanceWorkerAndSchedulerIntegrationTest {
         )
 
         // Cancel date work (called when schedule is edited with dueAt = null)
-        val scheduler = MaintenanceWorkScheduler(context, db)
+        val scheduler = MaintenanceWorkScheduler(context, db, CoroutineScope(Dispatchers.Unconfined))
         scheduler.cancelDateWorkOnly(scheduleId)
 
         // Anti-spam history MUST remain intact!

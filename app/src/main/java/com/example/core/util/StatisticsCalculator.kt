@@ -47,18 +47,36 @@ object StatisticsCalculator {
             previousOdometer = entry.odometerMeters
         }
 
-        val entryById = entries.associateBy { it.id }
-        val cyclesByMonth = FuelConsumptionCalculator.calculateCycles(entries)
-            .mapNotNull { cycle ->
-                entryById[cycle.endEntryId]?.let { cycle to monthKeyFormatter.format(Date(it.timestamp)) }
-            }
-            .groupBy({ it.second }, { it.first })
+        // One cycle pass drives both consumption and cost. Calling
+        // FuelCostCalculator.calculatePeriods() as well would sort the list again and
+        // recompute the same full-tank cycles for the second number.
+        val cycles = FuelConsumptionCalculator.calculateCycles(chronological)
+        val indexById = HashMap<Long, Int>(chronological.size)
+        chronological.forEachIndexed { index, entry -> indexById[entry.id] = index }
 
-        val costPeriodsByMonth = FuelCostCalculator.calculatePeriods(entries)
-            .mapNotNull { period ->
-                entryById[period.endEntryId]?.let { period to monthKeyFormatter.format(Date(it.timestamp)) }
-            }
-            .groupBy({ it.second }, { it.first })
+        val entryById = entries.associateBy { it.id }
+
+        fun monthKeyOfId(entryId: Long): String? =
+            entryById[entryId]?.let { monthKeyFormatter.format(Date(it.timestamp)) }
+
+        val cyclesByMonth = cycles
+            .mapNotNull { cycle -> monthKeyOfId(cycle.endEntryId)?.let { it to cycle } }
+            .groupBy({ it.first }, { it.second })
+
+        // Cost of each cycle: every purchase after the opening full tank, through the
+        // closing one.
+        val cycleCostByMonth = HashMap<String, Long>()
+        val cycleCostDistanceByMonth = HashMap<String, Long>()
+        for (cycle in cycles) {
+            val monthKey = monthKeyOfId(cycle.endEntryId) ?: continue
+            val startIndex = indexById[cycle.startEntryId] ?: continue
+            val endIndex = indexById[cycle.endEntryId] ?: continue
+            if (endIndex <= startIndex) continue
+            val costVnd = chronological.subList(startIndex + 1, endIndex + 1).sumOf { it.amountPaid }
+            cycleCostByMonth[monthKey] = (cycleCostByMonth[monthKey] ?: 0L) + costVnd
+            cycleCostDistanceByMonth[monthKey] =
+                (cycleCostDistanceByMonth[monthKey] ?: 0L) + cycle.distanceMeters
+        }
 
         val entriesByMonth = chronological.groupBy { monthKeyOf(it) }
 
@@ -82,9 +100,8 @@ object StatisticsCalculator {
             // Cost per km uses the same full-tank cycle as consumption: fuel bought in
             // one month mostly pays for the next month's driving, so dividing a month's
             // spend by that same month's distance shifts the cost by a whole cycle.
-            val monthCostPeriods = costPeriodsByMonth[monthKey].orEmpty()
-            val cycleCostVnd = monthCostPeriods.sumOf { it.costVnd }
-            val cycleDistanceMeters = monthCostPeriods.sumOf { it.distanceMeters }
+            val cycleCostVnd = cycleCostByMonth[monthKey] ?: 0L
+            val cycleDistanceMeters = cycleCostDistanceByMonth[monthKey] ?: 0L
             val avgCostPerKm: Double? = if (cycleDistanceMeters > 0L && cycleCostVnd > 0L) {
                 FuelCalculator.calculateCostPerKm(cycleCostVnd, cycleDistanceMeters)
             } else {

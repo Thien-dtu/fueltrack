@@ -14,10 +14,13 @@ import com.example.core.repository.MaintenanceRepository
 import com.example.core.repository.VehicleRepository
 import com.example.core.util.Formatters
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,25 +44,43 @@ class MaintenanceDashboardViewModel @Inject constructor(
 
     private val focusedScheduleId = MutableStateFlow<Long?>(null)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<MaintenanceDashboardUiState> = combine(
         vehicleRepository.observeActiveVehicles(),
-        userPreferences.selectedVehicleIdFlow,
-        maintenanceRepository.observeAllActiveSchedules(),
-        maintenanceRepository.observeAllEntries(),
-        focusedScheduleId
-    ) { vehicles, selectedVehicleId, allSchedules, allEntries, focusedId ->
-        if (vehicles.isEmpty()) {
-            return@combine MaintenanceDashboardUiState(isLoading = false)
+        userPreferences.selectedVehicleIdFlow
+    ) { vehicles, selectedVehicleId ->
+        val current = vehicles.find { it.id == selectedVehicleId } ?: vehicles.firstOrNull()
+        Triple(vehicles, current, selectedVehicleId)
+    }.flatMapLatest { (vehicles, currentVehicle, _) ->
+        if (currentVehicle == null) {
+            flowOf(MaintenanceDashboardUiState(isLoading = false))
+        } else {
+            // Scoped to the selected vehicle at the query level. Observing every
+            // vehicle's schedules and entries and filtering here meant the screen
+            // recomputed its stats on any change made to any other vehicle.
+            combine(
+                maintenanceRepository.observeActiveSchedulesForVehicle(currentVehicle.id),
+                maintenanceRepository.observeEntriesForVehicle(currentVehicle.id),
+                focusedScheduleId
+            ) { vehicleSchedules, vehicleEntries, focusedId ->
+                buildState(vehicles, currentVehicle, vehicleSchedules, vehicleEntries, focusedId)
+            }
         }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MaintenanceDashboardUiState(isLoading = true)
+    )
 
-        val currentVehicle = vehicles.find { it.id == selectedVehicleId } ?: vehicles.first()
+    private fun buildState(
+        vehicles: List<Vehicle>,
+        currentVehicle: Vehicle,
+        vehicleSchedules: List<MaintenanceSchedule>,
+        vehicleEntries: List<MaintenanceEntry>,
+        focusedId: Long?
+    ): MaintenanceDashboardUiState {
         val now = System.currentTimeMillis()
 
-        // Filter schedules for current vehicle
-        val vehicleSchedules = allSchedules.filter { it.vehicleId == currentVehicle.id }
-        val vehicleEntries = allEntries.filter { it.vehicleId == currentVehicle.id }
-
-        // Map schedules with computed due status
         val schedulesWithStatus = vehicleSchedules.map { schedule ->
             val status = MaintenancePolicy.calculateDueStatus(
                 lifecycleStatus = schedule.status,
@@ -68,40 +89,41 @@ class MaintenanceDashboardViewModel @Inject constructor(
                 currentOdometerMeters = currentVehicle.currentOdometerMeters,
                 currentTimeMillis = now
             )
-            val reason = buildTriggerReason(schedule, currentVehicle, now, status)
             MaintenanceScheduleWithStatus(
                 schedule = schedule,
                 vehicleName = currentVehicle.name,
                 currentOdometerMeters = currentVehicle.currentOdometerMeters,
                 dueStatus = status,
-                triggerReason = reason
+                triggerReason = buildTriggerReason(schedule, currentVehicle, now)
             )
         }
 
         val dueOrOverdue = schedulesWithStatus.filter {
             it.dueStatus == MaintenanceDueStatus.DUE || it.dueStatus == MaintenanceDueStatus.OVERDUE
-        }.sortedWith(compareBy({ it.schedule.id != focusedId }, { it.dueStatus != MaintenanceDueStatus.OVERDUE }, { it.schedule.dueAt ?: Long.MAX_VALUE }))
+        }.sortedWith(
+            compareBy(
+                { it.schedule.id != focusedId },
+                { it.dueStatus != MaintenanceDueStatus.OVERDUE },
+                { it.schedule.dueAt ?: Long.MAX_VALUE }
+            )
+        )
 
         val upcoming = schedulesWithStatus.filter {
             it.dueStatus == MaintenanceDueStatus.UPCOMING
-        }.sortedWith(compareBy({ it.schedule.id != focusedId }, { it.schedule.dueAt ?: Long.MAX_VALUE }))
+        }.sortedWith(
+            compareBy({ it.schedule.id != focusedId }, { it.schedule.dueAt ?: Long.MAX_VALUE })
+        )
 
-        val stats = maintenanceRepository.computeMaintenanceStats(vehicleEntries)
-
-        MaintenanceDashboardUiState(
+        return MaintenanceDashboardUiState(
             vehicles = vehicles,
             selectedVehicle = currentVehicle,
             dueSchedules = dueOrOverdue,
             upcomingSchedules = upcoming,
             recentEntries = vehicleEntries.take(5),
-            stats = stats,
+            stats = maintenanceRepository.computeMaintenanceStats(vehicleEntries),
             isLoading = false
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = MaintenanceDashboardUiState(isLoading = true)
-    )
+    }
 
     fun selectVehicle(vehicleId: Long) {
         viewModelScope.launch {
@@ -116,8 +138,7 @@ class MaintenanceDashboardViewModel @Inject constructor(
     private fun buildTriggerReason(
         schedule: MaintenanceSchedule,
         vehicle: Vehicle,
-        now: Long,
-        status: MaintenanceDueStatus
+        now: Long
     ): String {
         return buildString {
             if (schedule.dueAt != null) {

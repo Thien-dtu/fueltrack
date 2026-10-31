@@ -1,29 +1,29 @@
 package com.example.feature.dashboard
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.core.datastore.UserPreferencesDataStore
+import com.example.core.model.FuelEntry
 import com.example.core.model.FuelEntryWithDetails
 import com.example.core.model.MonthlyFuelStats
 import com.example.core.model.Vehicle
 import com.example.core.repository.FuelRepository
 import com.example.core.repository.FuelTypeRepository
 import com.example.core.repository.VehicleRepository
-import com.example.core.util.FuelConsumptionCalculator
+import com.example.core.util.FuelCycleMetricsCalculator
 import com.example.core.util.FuelDistanceCalculator
-import com.example.core.util.FuelCostCalculator
 import com.example.core.util.StatisticsCalculator
-import kotlinx.coroutines.flow.MutableStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
-
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 data class DashboardUiState(
@@ -48,60 +48,59 @@ class DashboardViewModel @Inject constructor(
     private val userPreferences: UserPreferencesDataStore
 ) : ViewModel() {
 
-    private val _selectedVehicleId = MutableStateFlow<Long?>(null)
-
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<DashboardUiState> = combine(
         vehicleRepository.observeActiveVehicles(),
-        userPreferences.selectedVehicleIdFlow,
-        fuelTypeRepository.observeAllFuelTypes(),
-        fuelRepository.observeAllEntries()
-    ) { activeVehicles, savedVehicleId, allFuelTypes, allEntries ->
-        if (activeVehicles.isEmpty()) {
-            return@combine DashboardUiState(isLoading = false)
-        }
-
-        // Determine currently active vehicle
-        val currentVehicle = activeVehicles.find { it.id == savedVehicleId }
-            ?: activeVehicles.first()
-
-        // Persist active vehicle selection if not set or changed
-        if (savedVehicleId != currentVehicle.id) {
-            viewModelScope.launch {
-                userPreferences.setSelectedVehicleId(currentVehicle.id)
+        userPreferences.selectedVehicleIdFlow
+    ) { vehicles, savedVehicleId ->
+        val current = vehicles.find { it.id == savedVehicleId } ?: vehicles.firstOrNull()
+        vehicles to current
+    }.flatMapLatest { (vehicles, current) ->
+        if (current == null) {
+            flowOf(DashboardUiState(isLoading = false))
+        } else {
+            // Only this vehicle's rows are read: subscribing to every vehicle's entries
+            // made the dashboard recompute its stats whenever an unrelated vehicle changed.
+            combine(
+                fuelRepository.observeEntriesForVehicle(current.id),
+                fuelTypeRepository.observeAllFuelTypes()
+            ) { entries, fuelTypes ->
+                buildState(vehicles, current, entries, fuelTypes)
             }
         }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = DashboardUiState(isLoading = true)
+    )
 
-        // Filter and sort entries for current vehicle
-        val vehicleEntries = allEntries
-            .filter { it.vehicleId == currentVehicle.id }
-            .sortedWith(compareByDescending<com.example.core.model.FuelEntry> { it.odometerMeters }.thenByDescending { it.timestamp })
+    private fun buildState(
+        vehicles: List<Vehicle>,
+        currentVehicle: Vehicle,
+        vehicleEntries: List<FuelEntry>,
+        fuelTypes: List<com.example.core.model.FuelType>
+    ): DashboardUiState {
+        val sortedDesc = vehicleEntries.sortedWith(
+            compareByDescending<FuelEntry> { it.odometerMeters }.thenByDescending { it.timestamp }
+        )
 
-        val fuelTypeMap = allFuelTypes.associateBy { it.id }
-        val consumptionByEntryId = FuelConsumptionCalculator.consumptionByEndingEntryId(vehicleEntries)
-        val costByEntryId = FuelCostCalculator.costByEndingEntryId(vehicleEntries)
-
-        // Build recent entries with detail diffs. The list is ordered newest-first for
-        // display, so "distance since previous fill-up" must be resolved by timestamp,
-        // not by the neighbouring list item (odometer order breaks after a reset).
+        val fuelTypeMap = fuelTypes.associateBy { it.id }
+        val cycleMetrics = FuelCycleMetricsCalculator.calculate(vehicleEntries)
+        // The list is ordered newest-first for display, so "distance since previous
+        // fill-up" must be resolved by timestamp, not by the neighbouring list item.
         val distanceByEntryId = FuelDistanceCalculator.distanceByEntryId(vehicleEntries)
-        val recentWithDetails = vehicleEntries.take(5).map { entry ->
-            val distMeters = distanceByEntryId[entry.id]
 
-            val consumption = consumptionByEntryId[entry.id]
-
-            val costPerKm = costByEntryId[entry.id]
-
+        val recentWithDetails = sortedDesc.take(5).map { entry ->
             FuelEntryWithDetails(
                 entry = entry,
                 fuelTypeName = fuelTypeMap[entry.fuelTypeId]?.name ?: "Nhiên liệu",
                 vehicleName = currentVehicle.name,
-                distanceSincePreviousMeters = distMeters,
-                consumptionLPer100Km = consumption,
-                costPerKmVnd = costPerKm
+                distanceSincePreviousMeters = distanceByEntryId[entry.id],
+                consumptionLPer100Km = cycleMetrics.consumptionByEntryId[entry.id],
+                costPerKmVnd = cycleMetrics.costPerKmByEntryId[entry.id]
             )
         }
 
-        // Compute monthly statistics
         val monthlyStats = StatisticsCalculator.computeMonthlyStats(vehicleEntries)
         val now = Calendar.getInstance()
         val currentMonthKey = String.format(
@@ -116,19 +115,15 @@ class DashboardViewModel @Inject constructor(
         // fall back to the most recent month that does have data and let the UI label it.
         val fallbackStats = currentMonthStats ?: monthlyStats.firstOrNull()
 
-        DashboardUiState(
-            vehicles = activeVehicles,
+        return DashboardUiState(
+            vehicles = vehicles,
             selectedVehicle = currentVehicle,
             recentEntries = recentWithDetails,
             currentMonthStats = fallbackStats,
             statsAreForCurrentMonth = currentMonthStats != null,
             isLoading = false
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = DashboardUiState(isLoading = true)
-    )
+    }
 
     fun selectVehicle(vehicleId: Long) {
         viewModelScope.launch {

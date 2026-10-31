@@ -8,6 +8,7 @@ import com.example.core.model.FuelEntryWithDetails
 import com.example.core.model.FuelType
 import com.example.core.model.Vehicle
 import com.example.core.repository.FuelRepository
+import com.example.core.repository.SaveFuelEntryResult
 import com.example.core.repository.FuelTypeRepository
 import com.example.core.repository.VehicleRepository
 import com.example.core.util.FuelCalculator
@@ -308,54 +309,50 @@ class AddEditFuelViewModel @Inject constructor(
         _formState.update { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
-            val excludedEntryId = editEntryId?.takeIf { it > 0L } ?: 0L
-            if (fuelRepository.hasOtherEntryAtOdometer(state.selectedVehicleId, odoMeters, excludedEntryId)) {
-                _formState.update {
-                    it.copy(
-                        isSubmitting = false,
-                        odoError = "ODO này đã có trong lịch sử của phương tiện. Vui lòng nhập ODO lớn hơn bản ghi trước.",
-                        odoWarning = null
-                    )
-                }
-                return@launch
-            }
-
             val now = System.currentTimeMillis()
-            if (editEntryId != null && editEntryId > 0) {
-                val existing = fuelRepository.getById(editEntryId)
-                if (existing != null) {
-                    val updated = existing.copy(
-                        vehicleId = state.selectedVehicleId,
-                        timestamp = state.timestamp,
-                        fuelTypeId = state.selectedFuelTypeId,
-                        odometerMeters = odoMeters,
-                        amountPaid = amount,
-                        pricePerLiter = price,
-                        liters = liters,
-                        isFullTank = state.isFullTank,
-                        note = state.note.trim(),
-                        updatedAt = now
-                    )
-                    fuelRepository.updateAndSyncOdometer(updated, existing)
-                }
-            } else {
-                val newEntry = FuelEntry(
-                    vehicleId = state.selectedVehicleId,
-                    timestamp = state.timestamp,
-                    odometerMeters = odoMeters,
-                    fuelTypeId = state.selectedFuelTypeId,
-                    pricePerLiter = price,
-                    amountPaid = amount,
-                    liters = liters,
-                    isFullTank = state.isFullTank,
-                    note = state.note.trim(),
-                    createdAt = now,
-                    updatedAt = now
-                )
-                fuelRepository.insertAndSyncOdometer(newEntry)
-            }
+            val editingId = editEntryId?.takeIf { it > 0L }
 
-            _formState.update { it.copy(isSubmitting = false, isSaved = true) }
+            // One call performs the duplicate check, the write and the odometer sync in
+            // a single transaction; the three round-trips this used to make could
+            // interleave with another save.
+            val entry = FuelEntry(
+                id = editingId ?: 0L,
+                vehicleId = state.selectedVehicleId,
+                timestamp = state.timestamp,
+                odometerMeters = odoMeters,
+                fuelTypeId = state.selectedFuelTypeId,
+                pricePerLiter = price,
+                amountPaid = amount,
+                liters = liters,
+                isFullTank = state.isFullTank,
+                note = state.note.trim(),
+                createdAt = if (editingId != null) {
+                    fuelRepository.getById(editingId)?.createdAt ?: now
+                } else {
+                    now
+                },
+                updatedAt = now
+            )
+
+            when (fuelRepository.saveWithOdometerSync(entry)) {
+                is SaveFuelEntryResult.Saved ->
+                    _formState.update { it.copy(isSubmitting = false, isSaved = true) }
+                SaveFuelEntryResult.DuplicateOdometer ->
+                    _formState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            odoError = "ODO này đã có trong lịch sử của phương tiện. Vui lòng nhập ODO lớn hơn bản ghi trước.",
+                            odoWarning = null
+                        )
+                    }
+                SaveFuelEntryResult.EntryNotFound ->
+                    _formState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            odoError = "Không tìm thấy bản ghi cần sửa. Có thể nó đã bị xoá."
+                        )
+                    }
+            }
         }
     }
 
