@@ -182,7 +182,10 @@ fun FuelEntryCard(
             }
 
             // Calculation Footer (if computed)
-            if (entryWithDetails.consumptionLPer100Km != null || entryWithDetails.distanceSincePreviousMeters != null) {
+            if (entryWithDetails.consumptionLPer100Km != null ||
+                entryWithDetails.costPerKmVnd != null ||
+                entryWithDetails.distanceSincePreviousMeters != null
+            ) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -205,6 +208,18 @@ fun FuelEntryCard(
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = SuccessGreen
+                        )
+                    }
+
+                    if (entryWithDetails.costPerKmVnd != null) {
+                        if (entryWithDetails.consumptionLPer100Km != null) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = "${Formatters.formatCurrencyVnd(entryWithDetails.costPerKmVnd.toLong())}/km",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.tertiary
                         )
                     }
 

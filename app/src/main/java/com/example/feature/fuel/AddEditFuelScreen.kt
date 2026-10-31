@@ -1,5 +1,7 @@
 package com.example.feature.fuel
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -68,6 +71,10 @@ import com.example.core.ui.theme.DarkSurface
 import com.example.core.ui.theme.DarkSurfaceVariant
 import com.example.core.ui.theme.SuccessGreen
 import com.example.core.util.Formatters
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +95,8 @@ fun AddEditFuelScreen(
     var vehicleMenuExpanded by remember { mutableStateOf(false) }
     var fuelTypeMenuExpanded by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
 
     Scaffold(
         topBar = {
@@ -197,6 +206,44 @@ fun AddEditFuelScreen(
                 ),
                 singleLine = true
             )
+
+            OutlinedButton(
+                onClick = {
+                    val selected = Calendar.getInstance().apply { timeInMillis = state.timestamp }
+                    DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            val withDate = Calendar.getInstance().apply {
+                                timeInMillis = state.timestamp
+                                set(Calendar.YEAR, year)
+                                set(Calendar.MONTH, month)
+                                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                            }
+                            TimePickerDialog(
+                                context,
+                                { _, hourOfDay, minute ->
+                                    withDate.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                    withDate.set(Calendar.MINUTE, minute)
+                                    withDate.set(Calendar.SECOND, 0)
+                                    withDate.set(Calendar.MILLISECOND, 0)
+                                    viewModel.onTimestampChanged(withDate.timeInMillis)
+                                },
+                                selected.get(Calendar.HOUR_OF_DAY),
+                                selected.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        },
+                        selected.get(Calendar.YEAR),
+                        selected.get(Calendar.MONTH),
+                        selected.get(Calendar.DAY_OF_MONTH)
+                    ).show()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("fuel_timestamp_picker")
+            ) {
+                Text("Thời điểm đổ: ${dateFormatter.format(Date(state.timestamp))}")
+            }
 
             // Warning if ODO decreased
             if (state.odoWarning != null) {

@@ -4,8 +4,95 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.example.core.model.FuelEntry
 
 class FuelTrackUnitTests {
+
+    @Test
+    fun testFuelConsumptionIncludesTopUpsBetweenFullTanks() {
+        val entries = listOf(
+            fuelEntry(1, 10_000_000L, 4.0, true, 1L),
+            fuelEntry(2, 10_100_000L, 2.0, false, 2L),
+            fuelEntry(3, 10_250_000L, 5.0, true, 3L)
+        )
+
+        val cycle = FuelConsumptionCalculator.calculateCycles(entries).single()
+
+        assertEquals(7.0, cycle.liters, 0.001)
+        assertEquals(2.8, cycle.consumptionLPer100Km!!, 0.01)
+    }
+
+    @Test
+    fun testFuelCostIncludesTopUpsBetweenFullTanks() {
+        val entries = listOf(
+            fuelEntry(1, 10_000_000L, 4.0, true, 1L, 100_000L),
+            fuelEntry(2, 10_100_000L, 2.0, false, 2L, 50_000L),
+            fuelEntry(3, 10_250_000L, 5.0, true, 3L, 125_000L)
+        )
+
+        val period = FuelCostCalculator.calculatePeriods(entries).single()
+
+        assertEquals(175_000L, period.costVnd)
+        assertEquals(700.0, period.costPerKmVnd!!, 0.01)
+    }
+
+    @Test
+    fun testFuelConsumptionNeedsTwoValidFullTankMarkers() {
+        val entries = listOf(fuelEntry(1, 10_000_000L, 4.0, true, 1L))
+
+        assertTrue(FuelConsumptionCalculator.calculateCycles(entries).isEmpty())
+    }
+
+    @Test
+    fun testFuelConsumptionSupportsConsecutiveFullTankCycles() {
+        val entries = listOf(
+            fuelEntry(1, 10_000_000L, 4.0, true, 1L),
+            fuelEntry(2, 10_100_000L, 3.0, true, 2L),
+            fuelEntry(3, 10_200_000L, 2.0, true, 3L)
+        )
+
+        val cycles = FuelConsumptionCalculator.calculateCycles(entries)
+
+        assertEquals(2, cycles.size)
+        assertEquals(3.0, cycles[0].liters, 0.001)
+        assertEquals(2.0, cycles[1].liters, 0.001)
+    }
+
+    @Test
+    fun testFuelConsumptionIgnoresDuplicateOdometerAndResetsAfterRollback() {
+        val entries = listOf(
+            fuelEntry(1, 10_000_000L, 4.0, true, 1L),
+            fuelEntry(2, 10_000_000L, 2.0, false, 2L),
+            fuelEntry(3, 10_100_000L, 3.0, true, 3L),
+            fuelEntry(4, 9_900_000L, 2.0, false, 4L),
+            fuelEntry(5, 10_200_000L, 5.0, true, 5L)
+        )
+
+        val cycles = FuelConsumptionCalculator.calculateCycles(entries)
+
+        assertEquals(1, cycles.size)
+        assertEquals(5.0, cycles.single().liters, 0.001)
+        assertEquals(5.0, cycles.single().consumptionLPer100Km!!, 0.01)
+    }
+
+    private fun fuelEntry(
+        id: Long,
+        odometerMeters: Long,
+        liters: Double,
+        isFullTank: Boolean,
+        timestamp: Long,
+        amountPaid: Long = 1L
+    ) = FuelEntry(
+        id = id,
+        vehicleId = 1L,
+        timestamp = timestamp,
+        odometerMeters = odometerMeters,
+        fuelTypeId = 1L,
+        pricePerLiter = 1L,
+        amountPaid = amountPaid,
+        liters = liters,
+        isFullTank = isFullTank
+    )
 
     @Test
     fun testOdometerParser_validIntegers() {

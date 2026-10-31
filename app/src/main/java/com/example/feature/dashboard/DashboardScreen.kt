@@ -206,10 +206,10 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = Formatters.formatConsumption(uiState.currentMonthStats?.averageConsumptionLPer100Km ?: uiState.latestConsumptionLPer100Km),
+                            text = Formatters.formatConsumption(uiState.currentMonthStats?.averageConsumptionLPer100Km),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (uiState.currentMonthStats?.averageConsumptionLPer100Km != null || uiState.latestConsumptionLPer100Km != null) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (uiState.currentMonthStats?.averageConsumptionLPer100Km != null) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -220,7 +220,7 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        val costPerKm = uiState.currentMonthStats?.averageCostPerKmVnd ?: uiState.latestCostPerKmVnd
+                        val costPerKm = uiState.currentMonthStats?.averageCostPerKmVnd
                         Text(
                             text = if (costPerKm != null) "${Formatters.formatCurrencyVnd(costPerKm.toLong())}/km" else "Chưa đủ dữ liệu",
                             fontSize = 18.sp,
@@ -386,4 +386,3 @@ fun DashboardStatSmallCard(
         }
     }
 }
-

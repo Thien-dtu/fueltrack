@@ -224,25 +224,47 @@ class AddEditScheduleViewModel @Inject constructor(
 
         viewModelScope.launch {
             val now = System.currentTimeMillis()
-            val schedule = MaintenanceSchedule(
-                id = editScheduleId ?: 0L,
-                vehicleId = state.selectedVehicleId,
-                templateId = state.selectedTemplateId,
-                title = state.title.trim(),
-                category = state.category.trim(),
-                dueAt = dueAtMillis,
-                dueOdometerMeters = dueOdoMeters,
-                intervalDays = intervalDays,
-                intervalMeters = intervalMeters,
-                status = ScheduleLifecycleStatus.ACTIVE,
-                createdAt = now,
-                updatedAt = now
-            )
-
             if (editScheduleId != null && editScheduleId > 0) {
-                maintenanceRepository.updateSchedule(schedule)
+                val existingSchedule = maintenanceRepository.getScheduleById(editScheduleId)
+                if (existingSchedule == null) {
+                    _formState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            conditionError = "Không tìm thấy lịch bảo dưỡng để cập nhật"
+                        )
+                    }
+                    return@launch
+                }
+
+                maintenanceRepository.updateSchedule(
+                    existingSchedule.copy(
+                        vehicleId = state.selectedVehicleId,
+                        templateId = state.selectedTemplateId,
+                        title = state.title.trim(),
+                        category = state.category.trim(),
+                        dueAt = dueAtMillis,
+                        dueOdometerMeters = dueOdoMeters,
+                        intervalDays = intervalDays,
+                        intervalMeters = intervalMeters,
+                        updatedAt = now
+                    )
+                )
             } else {
-                maintenanceRepository.insertSchedule(schedule)
+                maintenanceRepository.insertSchedule(
+                    MaintenanceSchedule(
+                        vehicleId = state.selectedVehicleId,
+                        templateId = state.selectedTemplateId,
+                        title = state.title.trim(),
+                        category = state.category.trim(),
+                        dueAt = dueAtMillis,
+                        dueOdometerMeters = dueOdoMeters,
+                        intervalDays = intervalDays,
+                        intervalMeters = intervalMeters,
+                        status = ScheduleLifecycleStatus.ACTIVE,
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                )
             }
 
             _formState.update { it.copy(isSubmitting = false, isSaved = true) }

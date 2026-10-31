@@ -19,12 +19,17 @@ object StatisticsCalculator {
     fun computeMonthlyStats(entries: List<FuelEntry>): List<MonthlyFuelStats> {
         if (entries.isEmpty()) return emptyList()
 
-        // Sort ascending by odometer/timestamp to trace journeys accurately
-        val sortedAsc = entries.sortedWith(compareBy({ it.odometerMeters }, { it.timestamp }))
+        val sortedAsc = entries.sortedWith(compareBy<FuelEntry> { it.odometerMeters }.thenBy { it.timestamp })
 
         val cal = Calendar.getInstance()
         val monthFormatKey = SimpleDateFormat("yyyy-MM", Locale.US)
         val monthFormatDisplay = SimpleDateFormat("'Tháng' M, yyyy", Locale.forLanguageTag("vi-VN"))
+        val entryById = entries.associateBy { it.id }
+        val cyclesByMonth = FuelConsumptionCalculator.calculateCycles(entries)
+            .mapNotNull { cycle ->
+                entryById[cycle.endEntryId]?.let { cycle to monthFormatKey.format(Date(it.timestamp)) }
+            }
+            .groupBy({ it.second }, { it.first })
 
         // Group entries by month key (e.g. "2026-10")
         val groupedByMonth = sortedAsc.groupBy { entry ->
@@ -49,27 +54,9 @@ object StatisticsCalculator {
             val maxOdoInMonth = monthEntries.maxOf { it.odometerMeters }
             val totalDistanceMeters = (maxOdoInMonth - baselineOdo).coerceAtLeast(0L)
 
-            // Calculate average consumption for pairs within or leading into this month where both are full tank
-            var fullTankDistanceMeters = 0L
-            var fullTankLiters = 0.0
-
-            for (entry in monthEntries) {
-                if (entry.isFullTank) {
-                    val prevFull = sortedAsc.lastOrNull {
-                        it.odometerMeters < entry.odometerMeters && it.isFullTank
-                    }
-                    if (prevFull != null && entry.odometerMeters > prevFull.odometerMeters) {
-                        // All liters consumed between prevFull and entry
-                        val betweenEntries = sortedAsc.filter {
-                            it.odometerMeters > prevFull.odometerMeters && it.odometerMeters <= entry.odometerMeters
-                        }
-                        val consumedLiters = betweenEntries.sumOf { it.liters }
-                        val legDistMeters = entry.odometerMeters - prevFull.odometerMeters
-                        fullTankDistanceMeters += legDistMeters
-                        fullTankLiters += consumedLiters
-                    }
-                }
-            }
+            val monthCycles = cyclesByMonth[monthKey].orEmpty()
+            val fullTankDistanceMeters = monthCycles.sumOf { it.distanceMeters }
+            val fullTankLiters = monthCycles.sumOf { it.liters }
 
             val avgConsumption: Double? = if (fullTankDistanceMeters > 0L && fullTankLiters > 0.0) {
                 FuelCalculator.calculateConsumptionLPer100Km(fullTankLiters, fullTankDistanceMeters)

@@ -8,6 +8,8 @@ import com.example.core.repository.FuelRepository
 import com.example.core.repository.FuelTypeRepository
 import com.example.core.repository.VehicleRepository
 import com.example.core.util.FuelCalculator
+import com.example.core.util.FuelConsumptionCalculator
+import com.example.core.util.FuelCostCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +54,8 @@ class FuelHistoryViewModel @Inject constructor(
         vehicleRepository.observeVehicle(vehicleId)
     ) { entries, fuelTypes, vehicle ->
         val fuelTypeMap = fuelTypes.associateBy { it.id }
+        val consumptionByEntryId = FuelConsumptionCalculator.consumptionByEndingEntryId(entries)
+        val costByEntryId = FuelCostCalculator.costByEndingEntryId(entries)
         val vehicleName = vehicle?.name ?: "Phương tiện"
 
         val detailedEntries = entries.mapIndexed { index, entry ->
@@ -60,13 +64,9 @@ class FuelHistoryViewModel @Inject constructor(
                 FuelCalculator.calculateDistance(prevEntry.odometerMeters, entry.odometerMeters)
             } else null
 
-            val consumption = if (entry.isFullTank && prevEntry != null && prevEntry.isFullTank && distMeters != null) {
-                FuelCalculator.calculateConsumptionLPer100Km(entry.liters, distMeters)
-            } else null
+            val consumption = consumptionByEntryId[entry.id]
 
-            val costPerKm = if (distMeters != null) {
-                FuelCalculator.calculateCostPerKm(entry.amountPaid, distMeters)
-            } else null
+            val costPerKm = costByEntryId[entry.id]
 
             FuelEntryWithDetails(
                 entry = entry,
@@ -91,12 +91,9 @@ class FuelHistoryViewModel @Inject constructor(
 
     fun deleteEntry(entryId: Long) {
         viewModelScope.launch {
-            fuelRepository.delete(entryId)
-            val latest = fuelRepository.getLatestForVehicle(vehicleId)
-            val vehicle = vehicleRepository.getVehicle(vehicleId)
-            if (vehicle != null) {
-                val newOdo = latest?.odometerMeters ?: vehicle.initialOdometerMeters
-                vehicleRepository.updateCurrentOdometer(vehicleId, newOdo)
+            val entry = fuelRepository.getById(entryId)
+            if (entry != null) {
+                fuelRepository.deleteAndSyncOdometer(entry)
             }
         }
     }

@@ -221,6 +221,10 @@ class AddEditFuelViewModel @Inject constructor(
         _formState.update { it.copy(note = newNote) }
     }
 
+    fun onTimestampChanged(timestamp: Long) {
+        _formState.update { it.copy(timestamp = timestamp) }
+    }
+
     fun setShowQuickCreateFuelType(show: Boolean) {
         _formState.update { it.copy(showQuickCreateFuelTypeDialog = show) }
     }
@@ -304,12 +308,25 @@ class AddEditFuelViewModel @Inject constructor(
         _formState.update { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
+            val excludedEntryId = editEntryId?.takeIf { it > 0L } ?: 0L
+            if (fuelRepository.hasOtherEntryAtOdometer(state.selectedVehicleId, odoMeters, excludedEntryId)) {
+                _formState.update {
+                    it.copy(
+                        isSubmitting = false,
+                        odoError = "ODO này đã có trong lịch sử của phương tiện. Vui lòng nhập ODO lớn hơn bản ghi trước.",
+                        odoWarning = null
+                    )
+                }
+                return@launch
+            }
+
             val now = System.currentTimeMillis()
             if (editEntryId != null && editEntryId > 0) {
                 val existing = fuelRepository.getById(editEntryId)
                 if (existing != null) {
                     val updated = existing.copy(
                         vehicleId = state.selectedVehicleId,
+                        timestamp = state.timestamp,
                         fuelTypeId = state.selectedFuelTypeId,
                         odometerMeters = odoMeters,
                         amountPaid = amount,
@@ -319,12 +336,12 @@ class AddEditFuelViewModel @Inject constructor(
                         note = state.note.trim(),
                         updatedAt = now
                     )
-                    fuelRepository.update(updated)
+                    fuelRepository.updateAndSyncOdometer(updated, existing)
                 }
             } else {
                 val newEntry = FuelEntry(
                     vehicleId = state.selectedVehicleId,
-                    timestamp = now,
+                    timestamp = state.timestamp,
                     odometerMeters = odoMeters,
                     fuelTypeId = state.selectedFuelTypeId,
                     pricePerLiter = price,
@@ -335,13 +352,7 @@ class AddEditFuelViewModel @Inject constructor(
                     createdAt = now,
                     updatedAt = now
                 )
-                fuelRepository.insert(newEntry)
-            }
-
-            // Also update vehicle's current odometer if new ODO is higher
-            val vehicle = vehicleRepository.getVehicle(state.selectedVehicleId)
-            if (vehicle != null && odoMeters > vehicle.currentOdometerMeters) {
-                vehicleRepository.updateCurrentOdometer(state.selectedVehicleId, odoMeters)
+                fuelRepository.insertAndSyncOdometer(newEntry)
             }
 
             _formState.update { it.copy(isSubmitting = false, isSaved = true) }
@@ -352,14 +363,9 @@ class AddEditFuelViewModel @Inject constructor(
         if (editEntryId == null || editEntryId <= 0) return
         _formState.update { it.copy(isSubmitting = true) }
         viewModelScope.launch {
-            fuelRepository.delete(editEntryId)
-            // Recalculate latest vehicle odometer
-            val vehicleId = _formState.value.selectedVehicleId
-            val latest = fuelRepository.getLatestForVehicle(vehicleId)
-            val vehicle = vehicleRepository.getVehicle(vehicleId)
-            if (vehicle != null) {
-                val newOdo = latest?.odometerMeters ?: vehicle.initialOdometerMeters
-                vehicleRepository.updateCurrentOdometer(vehicleId, newOdo)
+            val entry = fuelRepository.getById(editEntryId)
+            if (entry != null) {
+                fuelRepository.deleteAndSyncOdometer(entry)
             }
             _formState.update { it.copy(isSubmitting = false, isSaved = true) }
         }

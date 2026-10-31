@@ -150,7 +150,7 @@ fun StatisticsScreen(
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "Tổng chi phí",
+                                text = "Chi phí nhiên liệu",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
