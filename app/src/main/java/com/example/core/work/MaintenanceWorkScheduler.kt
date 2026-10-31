@@ -27,7 +27,7 @@ class MaintenanceWorkScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val database: AppDatabase,
     @param:ApplicationScope private val applicationScope: CoroutineScope
-) {
+) : MaintenanceReminderScheduler {
 
     private fun getWorkManager(): WorkManager? {
         return try {
@@ -42,7 +42,7 @@ class MaintenanceWorkScheduler @Inject constructor(
      * Schedules unique background work for a schedule's upcoming and due dates.
      * Replaces previous work for the schedule's current cycle, preventing duplicates.
      */
-    fun scheduleDateReminders(schedule: MaintenanceSchedule) {
+    override fun scheduleDateReminders(schedule: MaintenanceSchedule) {
         if (schedule.isArchived || schedule.status != ScheduleLifecycleStatus.ACTIVE) {
             cancelReminders(schedule.id)
             return
@@ -131,7 +131,7 @@ class MaintenanceWorkScheduler @Inject constructor(
      * Cancels any pending background work and active notifications, resetting anti-spam history for a schedule.
      * Used when schedule is cancelled, archived, completed, or deleted.
      */
-    fun cancelReminders(scheduleId: Long) {
+    override fun cancelReminders(scheduleId: Long) {
         cancelDateWorkOnly(scheduleId)
         MaintenanceNotificationHelper.cancelNotification(context, scheduleId)
     }
@@ -141,7 +141,7 @@ class MaintenanceWorkScheduler @Inject constructor(
      * (e.g., logging a fuel entry or updating vehicle details).
      * Does NOT poll continuously; only evaluates on actual user data changes.
      */
-    fun evaluateOdometerReminders(vehicleId: Long, newOdometerMeters: Long) {
+    override fun evaluateOdometerReminders(vehicleId: Long, newOdometerMeters: Long) {
         // Runs on the shared application scope: creating a fresh
         // CoroutineScope(Dispatchers.IO) per call leaked a job for every odometer
         // update and swallowed failures inside it.

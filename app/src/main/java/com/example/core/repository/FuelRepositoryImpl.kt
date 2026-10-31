@@ -5,8 +5,10 @@ import com.example.core.database.dao.VehicleDao
 import com.example.core.database.AppDatabase
 import com.example.core.database.entity.FuelEntryEntity
 import com.example.core.model.FuelEntry
+import com.example.core.work.MaintenanceReminderScheduler
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 import javax.inject.Inject
@@ -17,19 +19,22 @@ class FuelRepositoryImpl @Inject constructor(
     private val database: AppDatabase,
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
-    private val workScheduler: com.example.core.work.MaintenanceWorkScheduler? = null
+    private val workScheduler: MaintenanceReminderScheduler? = null
 ) : FuelRepository {
 
     override fun observeEntriesForVehicle(vehicleId: Long): Flow<List<FuelEntry>> {
-        return fuelEntryDao.observeEntriesForVehicle(vehicleId).map { list ->
-            list.map { it.toDomain() }
-        }
+        return fuelEntryDao.observeEntriesForVehicle(vehicleId)
+            .map { list -> list.map { it.toDomain() } }
+            // Room re-runs the query on any write to the observed tables, so an
+            // unrelated update (another vehicle, another table) emits an equal list.
+            // Dropping those keeps every downstream statistics pass from re-running.
+            .distinctUntilChanged()
     }
 
     override fun observeAllEntries(): Flow<List<FuelEntry>> {
-        return fuelEntryDao.observeAllEntries().map { list ->
-            list.map { it.toDomain() }
-        }
+        return fuelEntryDao.observeAllEntries()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override suspend fun getById(id: Long): FuelEntry? {

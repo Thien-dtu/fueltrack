@@ -8,6 +8,8 @@ import com.example.core.repository.MaintenanceRepository
 import com.example.core.repository.MaintenanceRepositoryImpl
 import com.example.core.repository.VehicleRepository
 import com.example.core.repository.VehicleRepositoryImpl
+import com.example.core.work.MaintenanceReminderScheduler
+import com.example.core.work.MaintenanceWorkScheduler
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindMaintenanceRepository(
         impl: MaintenanceRepositoryImpl
     ): MaintenanceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMaintenanceReminderScheduler(
+        impl: MaintenanceWorkScheduler
+    ): MaintenanceReminderScheduler
 }

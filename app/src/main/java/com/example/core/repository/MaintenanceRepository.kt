@@ -14,8 +14,10 @@ import com.example.core.model.MaintenanceStats
 import com.example.core.model.MaintenanceTemplate
 import com.example.core.model.MonthlyCostStat
 import com.example.core.model.ScheduleLifecycleStatus
+import com.example.core.work.MaintenanceReminderScheduler
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -68,15 +70,19 @@ class MaintenanceRepositoryImpl @javax.inject.Inject constructor(
     private val entryDao: MaintenanceEntryDao,
     private val scheduleDao: MaintenanceScheduleDao,
     private val vehicleDao: VehicleDao,
-    private val workScheduler: com.example.core.work.MaintenanceWorkScheduler? = null
+    private val workScheduler: MaintenanceReminderScheduler? = null
 ) : MaintenanceRepository {
 
     override fun observeActiveTemplates(): Flow<List<MaintenanceTemplate>> {
-        return templateDao.observeActiveTemplates().map { list -> list.map { it.toDomain() } }
+        return templateDao.observeActiveTemplates()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override fun observeAllTemplates(): Flow<List<MaintenanceTemplate>> {
-        return templateDao.observeAllTemplates().map { list -> list.map { it.toDomain() } }
+        return templateDao.observeAllTemplates()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override suspend fun getTemplateById(id: Long): MaintenanceTemplate? {
@@ -100,11 +106,15 @@ class MaintenanceRepositoryImpl @javax.inject.Inject constructor(
     }
 
     override fun observeEntriesForVehicle(vehicleId: Long): Flow<List<MaintenanceEntry>> {
-        return entryDao.observeEntriesForVehicle(vehicleId).map { list -> list.map { it.toDomain() } }
+        return entryDao.observeEntriesForVehicle(vehicleId)
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override fun observeAllEntries(): Flow<List<MaintenanceEntry>> {
-        return entryDao.observeAllEntries().map { list -> list.map { it.toDomain() } }
+        return entryDao.observeAllEntries()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override suspend fun getEntryById(id: Long): MaintenanceEntry? {
@@ -131,15 +141,21 @@ class MaintenanceRepositoryImpl @javax.inject.Inject constructor(
     }
 
     override fun observeActiveSchedulesForVehicle(vehicleId: Long): Flow<List<MaintenanceSchedule>> {
-        return scheduleDao.observeActiveSchedulesForVehicle(vehicleId).map { list -> list.map { it.toDomain() } }
+        return scheduleDao.observeActiveSchedulesForVehicle(vehicleId)
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override fun observeAllActiveSchedules(): Flow<List<MaintenanceSchedule>> {
-        return scheduleDao.observeAllActiveSchedules().map { list -> list.map { it.toDomain() } }
+        return scheduleDao.observeAllActiveSchedules()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override fun observeAllSchedulesForVehicle(vehicleId: Long): Flow<List<MaintenanceSchedule>> {
-        return scheduleDao.observeAllSchedulesForVehicle(vehicleId).map { list -> list.map { it.toDomain() } }
+        return scheduleDao.observeAllSchedulesForVehicle(vehicleId)
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override suspend fun getScheduleById(id: Long): MaintenanceSchedule? {

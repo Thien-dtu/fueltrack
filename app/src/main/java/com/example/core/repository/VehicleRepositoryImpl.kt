@@ -3,7 +3,9 @@ package com.example.core.repository
 import com.example.core.database.dao.VehicleDao
 import com.example.core.database.entity.VehicleEntity
 import com.example.core.model.Vehicle
+import com.example.core.work.MaintenanceReminderScheduler
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 import javax.inject.Inject
@@ -12,23 +14,25 @@ import javax.inject.Singleton
 @Singleton
 class VehicleRepositoryImpl @Inject constructor(
     private val vehicleDao: VehicleDao,
-    private val workScheduler: com.example.core.work.MaintenanceWorkScheduler? = null
+    private val workScheduler: MaintenanceReminderScheduler? = null
 ) : VehicleRepository {
 
     override fun observeActiveVehicles(): Flow<List<Vehicle>> {
-        return vehicleDao.observeActiveVehicles().map { list ->
-            list.map { it.toDomain() }
-        }
+        return vehicleDao.observeActiveVehicles()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override fun observeAllVehicles(): Flow<List<Vehicle>> {
-        return vehicleDao.observeAllVehicles().map { list ->
-            list.map { it.toDomain() }
-        }
+        return vehicleDao.observeAllVehicles()
+            .map { list -> list.map { it.toDomain() } }
+            .distinctUntilChanged()
     }
 
     override fun observeVehicle(id: Long): Flow<Vehicle?> {
-        return vehicleDao.observeVehicleById(id).map { it?.toDomain() }
+        return vehicleDao.observeVehicleById(id)
+            .map { it?.toDomain() }
+            .distinctUntilChanged()
     }
 
     override suspend fun getVehicle(id: Long): Vehicle? {
