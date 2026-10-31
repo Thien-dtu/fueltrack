@@ -43,8 +43,13 @@ android {
 
   buildTypes {
     release {
-      isCrunchPngs = false
-      isMinifyEnabled = false
+      // PNG crunching was explicitly disabled; leaving it on lets AAPT re-encode
+      // and strip metadata from drawables, which is free size.
+      isCrunchPngs = true
+      isMinifyEnabled = true
+      // Resource shrinking only works together with R8, and drops resources that
+      // no reachable code references (unused drawables, layouts, strings).
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       // Do not remove or modify this signingConfig assignment. It is necessary for Android apps in
       // AI Studio.
