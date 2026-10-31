@@ -89,6 +89,30 @@ class AddEditFuelViewModel @Inject constructor(
 
     private fun loadInitialData() {
         viewModelScope.launch {
+            // Load the edited entry BEFORE subscribing to the vehicle/fuel-type flows.
+            // Previously both ran as independent launches, so the collector could emit
+            // after the edit values were written and recompute the form from the
+            // vehicle list - a race whose winner depended on DB timing.
+            if (editEntryId != null && editEntryId > 0) {
+                val entry = fuelRepository.getById(editEntryId)
+                if (entry != null) {
+                    _formState.update {
+                        it.copy(
+                            selectedVehicleId = entry.vehicleId,
+                            selectedFuelTypeId = entry.fuelTypeId,
+                            odoInput = OdometerParser.formatForEdit(entry.odometerMeters, useComma = true),
+                            pricePerLiterInput = entry.pricePerLiter.toString(),
+                            amountPaidInput = entry.amountPaid.toString(),
+                            calculatedLiters = entry.liters,
+                            isFullTank = entry.isFullTank,
+                            note = entry.note,
+                            timestamp = entry.timestamp
+                        )
+                    }
+                    recalculateLiters()
+                }
+            }
+
             val vehicles = vehicleRepository.observeActiveVehicles()
             val fuelTypes = fuelTypeRepository.observeActiveFuelTypes()
 
@@ -131,28 +155,6 @@ class AddEditFuelViewModel @Inject constructor(
             }
         }
 
-        // If editing existing entry, populate fields
-        if (editEntryId != null && editEntryId > 0) {
-            viewModelScope.launch {
-                val entry = fuelRepository.getById(editEntryId)
-                if (entry != null) {
-                    _formState.update {
-                        it.copy(
-                            selectedVehicleId = entry.vehicleId,
-                            selectedFuelTypeId = entry.fuelTypeId,
-                            odoInput = OdometerParser.formatForEdit(entry.odometerMeters, useComma = true),
-                            pricePerLiterInput = entry.pricePerLiter.toString(),
-                            amountPaidInput = entry.amountPaid.toString(),
-                            calculatedLiters = entry.liters,
-                            isFullTank = entry.isFullTank,
-                            note = entry.note,
-                            timestamp = entry.timestamp
-                        )
-                    }
-                    recalculateLiters()
-                }
-            }
-        }
     }
 
     fun onVehicleSelected(vehicleId: Long) {
