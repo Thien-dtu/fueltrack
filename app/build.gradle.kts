@@ -59,26 +59,18 @@ android {
       // Do not remove or modify this signingConfig assignment. It is necessary for Android apps in
       // AI Studio.
       signingConfig = signingConfigs.getByName("debugConfig")
-    }
-
-    /**
-     * Same optimisations as release, but signed with the local debug key.
-     *
-     * Release itself cannot be assembled without the upload keystore
-     * (my-upload-key.jks), which is not in the repository. Enabling minification on
-     * the debug build type would work around that, but it would make every normal
-     * debug build run R8 (minutes instead of seconds) and would strip the
-     * debuggability developers rely on.
-     *
-     * This build type exists purely to measure the optimised APK:
-     *   ./gradlew :app:assembleSizeCheck
-     */
-    create("sizeCheck") {
-      initWith(getByName("release"))
-      // Override the release signing config, which points at the missing upload key.
-      signingConfig = signingConfigs.getByName("debugConfig")
-      // Merged resources / manifest placeholders come from the release variant.
-      matchingFallbacks += listOf("release")
+      // Debug builds are optimised exactly like release so the APK that is installed
+      // during development has the same size and the same R8 behaviour as the shipped
+      // one. This also makes release buildable without the upload keystore
+      // (my-upload-key.jks), which is not in the repository.
+      //
+      // Trade-offs, accepted deliberately:
+      //  - assembleDebug now runs R8: minutes instead of seconds.
+      //  - Breakpoints work, but locals are renamed and the code is inlined; read the
+      //    stack trace through app/build/outputs/mapping/debug/mapping.txt.
+      isMinifyEnabled = true
+      isShrinkResources = true
+      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
     }
   }
   compileOptions {
