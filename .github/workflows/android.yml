@@ -32,3 +32,14 @@ jobs:
       with:
         name: fueltrack-debug-apk
         path: app/build/outputs/apk/debug/*.apk
+
+    - name: Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          name: Release ${{ github.ref_name }}
+          body: "Tự động phát hành phiên bản ${{ github.ref_name }}."
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
