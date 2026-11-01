@@ -12,13 +12,13 @@ jobs:
 
     steps:
     - name: Checkout mã nguồn
-      uses: actions/checkout@v5
+      uses: actions/checkout@v7
 
-    - name: Thiết lập Java 17
-      uses: actions/setup-java@v5
+    - name: Thiết lập Java 25
+      uses: actions/setup-java@v6
       with:
-        distribution: 'zulu' # Hoặc 'temurin'
-        java-version: '17'
+        distribution: 'temurin'
+        java-version: '25'
         cache: 'gradle'
 
     - name: Cấp quyền thực thi cho Gradlew
@@ -34,11 +34,13 @@ jobs:
         path: app/build/outputs/apk/debug/*.apk
 
     - name: Create GitHub Release and Upload APK
+      if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: build-${{ github.run_number }}
         files: app/build/outputs/apk/debug/*.apk
-        name: Release ${{ github.ref_name }}
-        body: "Tự động phát hành phiên bản ${{ github.ref_name }}."
+        name: Build ${{ github.run_number }}
+        body: "Bản build tự động từ commit ${{ github.sha }}."
         draft: false
         prerelease: false
       env:
