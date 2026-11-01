@@ -6,19 +6,24 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+permissions:
+  contents: write   # Cho phép tạo tag và Release
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout mã nguồn
       uses: actions/checkout@v7
 
-    - name: Thiết lập Java 25
+    - name: Thiết lập Java 17
       uses: actions/setup-java@v6
       with:
         distribution: 'temurin'
-        java-version: '25'
+        java-version: '17'
         cache: 'gradle'
 
     - name: Cấp quyền thực thi cho Gradlew
@@ -28,14 +33,14 @@ jobs:
       run: ./gradlew assembleDebug
 
     - name: Upload file APK lên GitHub để bạn tải về
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: fueltrack-debug-apk
         path: app/build/outputs/apk/debug/*.apk
 
     - name: Create GitHub Release and Upload APK
       if: github.event_name == 'push'
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         tag_name: build-${{ github.run_number }}
         files: app/build/outputs/apk/debug/*.apk
